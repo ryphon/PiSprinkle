@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="margin-top: 60px">
+	<div class="container-fluid">
+		{% include 'messages.html' %}
+		<div class="panel panel-default">
+			<div class="panel-heading">Stages</div>
+			<div class="panel-body">
+				<h1>
+				<ul>
+				{% for zone in zones %}
+					<li>
+						<a href="{{ url_for('toggle_zone', zoneNum=loop.index) }}">
+				{% if zone.is_running() %}
+						<span class="glyphicon glyphicon-ok-circle text-success"></span>
+				{% else %}
+						<span class="glyphicon glyphicon-remove-sign text-danger"></span>
+				{% endif %}
+						Zone {{ loop.index }}
+						</a>
+					</li>
+				{% endfor %}
+				</ul>
+				</h1>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
