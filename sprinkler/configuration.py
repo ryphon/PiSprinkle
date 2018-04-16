@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
+import os
+from uuid import uuid4
 
-from examples.auth.config import SQLALCHEMY_TRACK_MODIFICATIONS
 
 class Config(object):
     '''
@@ -9,18 +10,21 @@ class Config(object):
 
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = "you-will-never-guess"
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') \
+        or 'sqlite:///app.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.environ.get('SECRET_KEY') \
+        or uuid4().hex
     CSRF_ENABLED = True
 
 
 class ProductionConfig(Config):
-    DATABASE_URI = 'mysql://user@localhost/foo'
+    pass
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
 class TestingConfig(Config):

@@ -10,13 +10,13 @@
 				<ul>
 				{% for zone in zones %}
 					<li>
-						<a href="{{ url_for('toggle_zone', zoneNum=loop.index) }}">
-				{% if zone.is_running() %}
+						<a href="">
+				{% if zone.state == 'on' %}
 						<span class="glyphicon glyphicon-ok-circle text-success"></span>
 				{% else %}
 						<span class="glyphicon glyphicon-remove-sign text-danger"></span>
 				{% endif %}
-						Zone {{ loop.index }}
+						Zone: {{ zone.name }}
 						</a>
 					</li>
 				{% endfor %}
