@@ -8,6 +8,7 @@ from werkzeug.utils import redirect
 from flask.helpers import url_for
 from flask_restful import Resource, reqparse, fields, marshal
 import sys
+from flask.globals import request
 
 
 class ZoneAPI(Resource):
@@ -88,10 +89,9 @@ api.add_resource(ZoneListAPI,
 
 @app.route('/')
 def index():
-    return render_template('index.html',
-                           zones=Zone.query.all())
+    return render_template('index.html')
 
 
 @app.route('/view')
 def view():
-    return render_template('index.html')
+    return redirect(url_for('index'))

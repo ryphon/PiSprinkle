@@ -4,26 +4,71 @@
 	<div class="container-fluid">
 		{% include 'messages.html' %}
 		<div class="panel panel-default">
-			<div class="panel-heading">Stages</div>
-			<div class="panel-body">
-				<h1>
+			<div class="panel-heading">Irrigation Zones</div>
+			<div id="app" class="panel-body">
 				<ul>
-				{% for zone in zones %}
-					<li>
-						<a href="">
-				{% if zone.state == 'on' %}
-						<span class="glyphicon glyphicon-ok-circle text-success"></span>
-				{% else %}
-						<span class="glyphicon glyphicon-remove-sign text-danger"></span>
-				{% endif %}
-						Zone: {{ zone.name }}
-						</a>
-					</li>
-				{% endfor %}
+				    <zone-el
+				    	v-for="zone in zones"
+				    	v-bind:init-zone="zone">
+					</zone-el>
 				</ul>
-				</h1>
 			</div>
 		</div>
 	</div>
 </div>
+{% raw %}
+<script>
+	Vue.component('zone-el', {
+		props: ['initZone'],
+		template:
+			`<li>
+				<div class="btn" v-on:click="toggleState">
+					<span v-if="zone.state == 'on'" class="glyphicon glyphicon-ok-circle text-success"></span>
+					<span v-else class="glyphicon glyphicon-remove-sign text-danger"></span>
+					Zone: {{ zone.name }}
+				</div>
+			</li>`,
+		data: function() {
+			return {
+				zone: this.initZone
+			}
+		},
+		methods: {
+			toggleState: function() {
+				var state = (this.zone.state == 'on' ? 'off' : 'on');
+				console.log('Turning zone ' + this.zone.name + ' ' + state);
+				var comp = this
+				fetch(
+					this.zone.uri,
+					{method: 'PUT',
+					headers: new Headers({
+						'Content-Type': 'application/json'
+					}),
+					body: JSON.stringify({state: state})})
+				.then( function(result) {
+					return result.json() })
+				.then( function(data) {
+					comp.zone = data;
+				})
+			}
+		}
+	})
+
+	var app = new Vue({
+		el: '#app',
+		data: {
+			zones: []
+		},
+		created: function() {
+			fetch("zones")
+			.then(function(result){
+				return result.json()
+			})
+			.then(function(data){
+				app.zones = data;
+			});
+		}
+	})
+</script>
+{% endraw %}
 {% endblock %}
