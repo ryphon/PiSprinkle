@@ -1,28 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container-fluid" style="margin-top: 60px">
-	<div class="container-fluid">
+	<div id="app" class="container-fluid">
 		{% include 'messages.html' %}
 		<div class="panel panel-default">
-			<div class="panel-heading">Irrigation Zones</div>
-			<div id="app" class="panel-body">
-				<ul>
-				    <zone-el
-				    	v-for="zone in zones"
-				    	v-bind:init-zone="zone">
-					</zone-el>
-				</ul>
+			<ul class="nav nav-tabs">
+				<li class="active"><a data-toggle="tab" href="#control">Control</a></li>
+				<li><a data-toggle="tab" href="#setup">Set Up</a></li>
+				<li><a data-toggle="tab" href="#schedule">Schedule</a></li>
+			</ul>
+			<div class="tab-content">
+				<div id="control" class="tab-pane fade in active">
+					<ul>
+					    <zone-control
+					    	v-for="zone in zones"
+					    	v-bind:init-zone="zone"
+					    	v-bind:key="zone.id">
+						</zone-control>
+					</ul>
+				</div>
+				<div id="setup" class="tab-pane fade">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Pin</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr is="zone-setup"
+								v-for="zone in zones"
+								v-bind:init-zone="zone"
+								v-bind:key="zone.id">
+							</tr>
+							<tr is="zone-add"></tr>
+						</tbody>
+					</table>
+				</div>
+				<div id="schedule" class="tab-pane fade">
+				</div>
 			</div>
+			
 		</div>
 	</div>
 </div>
 {% raw %}
 <script>
-	Vue.component('zone-el', {
+	Vue.component('zone-control', {
 		props: ['initZone'],
 		template:
 			`<li>
-				<div class="btn" v-on:click="toggleState">
+				<div class="btn btn-default" v-on:click="toggleState">
 					<span v-if="zone.state == 'on'" class="glyphicon glyphicon-ok-circle text-success"></span>
 					<span v-else class="glyphicon glyphicon-remove-sign text-danger"></span>
 					Zone: {{ zone.name }}
@@ -31,7 +60,7 @@
 		data: function() {
 			return {
 				zone: this.initZone
-			}
+			};
 		},
 		methods: {
 			toggleState: function() {
@@ -44,29 +73,96 @@
 					headers: new Headers({
 						'Content-Type': 'application/json'
 					}),
-					body: JSON.stringify({state: state})})
-				.then( function(result) {
-					return result.json() })
-				.then( function(data) {
+					body: JSON.stringify({state: state})
+				}).then( function(result) {
+					return result.json()
+				}).then( function(data) {
 					comp.zone = data;
-				})
+				});
 			}
 		}
 	})
 
+	Vue.component('zone-setup', {
+		props: ['initZone'],
+		template:
+			`<tr>
+				<td>{{ zone.name }}</td>
+				<td>{{ zone.pin }}</td>
+				<td><div v-on:click="deleteZone" class="btn btn-danger btn-small"></div></td>
+			</tr>`,
+		data: function() {
+			return {
+				zone: this.initZone
+			};
+		},
+		methods: {
+			deleteZone: function() {
+				fetch(
+					this.zone.uri,
+					{method: 'DELETE'}
+				).then( function(result) {
+					app.load_zones();
+				});
+			}
+		}
+	})
+
+	Vue.component('zone-add', {
+		template:
+			`<tr>
+				<td><input v-model="zone.name" type="text" class="form-control"></input></td>
+				<td><input v-model="zone.pin" type="text" class="form-control"></input></td>
+				<td><div v-on:click="addZone" class="btn btn-success btn-small"></div></td>
+			</tr>`,
+		data: function() {
+			return {
+				zone: {
+					name: '',
+					pin: ''
+				}
+			};
+		},
+		methods: {
+			addZone: function() {
+				console.log('Adding zone ' + this.zone.name);
+				var comp = this
+				fetch(
+					"/zones",
+					{
+						method: 'POST',
+						headers: new Headers({
+							'Content-Type': 'application/json'
+						}),
+						body: JSON.stringify({
+							name: comp.zone.name,
+							pin: comp.zone.pin})
+					}
+				).then( function(result) {
+					app.load_zones()
+					comp.zone = {}
+				});
+			}
+		}
+	})
+	
 	var app = new Vue({
 		el: '#app',
 		data: {
 			zones: []
 		},
+		methods: {
+			load_zones: function() {
+				fetch("zones")
+				.then(function(result){
+					return result.json()
+				}).then(function(data){
+					app.zones = data;
+				});
+			}
+		},
 		created: function() {
-			fetch("zones")
-			.then(function(result){
-				return result.json()
-			})
-			.then(function(data){
-				app.zones = data;
-			});
+			this.load_zones();
 		}
 	})
 </script>

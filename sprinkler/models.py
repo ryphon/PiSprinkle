@@ -13,7 +13,13 @@ class Zone(db.Model):
 
     id = Column(Integer, primary_key=True)
     pin = Column(Integer, unique=True)
-    name = Column(String(64))
+    name = Column(String(64), unique=True)
+
+    def __init__(self, pin: int, name: str):
+        app.logger.info('--- Zone init ---')
+        self.pin = pin
+        self.name = name
+        self.set_up()
 
     @property
     def state(self):
@@ -52,10 +58,11 @@ class Zone(db.Model):
                 pin=self.pin)
 
 
-@event.listens_for(Zone, 'init')
-def zone_init_handler(target, args, kwargs):
-    app.logger.info('init')
-    app.logger.info(target)
+# @event.listens_for(Zone, 'init')
+# def zone_init_handler(target, args, kwargs):
+#     app.logger.info('init')
+#     app.logger.info(target)
+#     target.set_up()
 
 
 @event.listens_for(Zone, 'after_delete')

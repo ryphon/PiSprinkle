@@ -7,8 +7,7 @@ from sprinkler.models import Zone
 from werkzeug.utils import redirect
 from flask.helpers import url_for
 from flask_restful import Resource, reqparse, fields, marshal
-import sys
-from flask.globals import request
+from sqlalchemy.exc import IntegrityError
 
 
 class ZoneAPI(Resource):
@@ -19,8 +18,9 @@ class ZoneAPI(Resource):
 
     fields = {
         'uri': fields.Url('zone'),
+        'name': fields.String,
         'state': fields.String,
-        'name': fields.String
+        'pin': fields.Integer
         }
 
     def get(self, id: int):
@@ -68,12 +68,14 @@ class ZoneListAPI(Resource):
         args = self.parser.parse_args(strict=True)
         zone = Zone(name=args['name'],
                     pin=args['pin'])
-        db.session.add(zone)
-        db.session.commit()
-        # Reset and query zone to trigger init_on_load
-        zone_id = zone.id
-        zone = None
-        zone = Zone.query.get(zone_id)
+        try:
+            db.session.add(zone)
+            db.session.commit()
+        except IntegrityError:
+            app.logger.warning(
+                'Invalid zone creation attempted: {}'.format(zone))
+            zone.clean_up()
+            return {'message': 'Failed to create zone'}, 400
         if args.get('state') is not None:
             zone.state = args['state']
         return marshal(zone, ZoneAPI.fields)
