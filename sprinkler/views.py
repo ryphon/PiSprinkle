@@ -18,6 +18,7 @@ class ZoneAPI(Resource):
 
     fields = {
         'uri': fields.Url('zone'),
+        'id': fields.Integer,
         'name': fields.String,
         'state': fields.String,
         'pin': fields.Integer
