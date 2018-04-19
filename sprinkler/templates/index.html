@@ -11,7 +11,7 @@
 			</ul>
 			<div class="tab-content">
 				<div id="control" class="tab-pane fade in active">
-					<ul>
+					<ul class="nav nav-pills nav-stacked" style="margin-top:2px">
 					    <zone-control
 					    	v-for="zone in zones"
 					    	v-bind:init-zone="zone"
@@ -50,10 +50,10 @@
 	Vue.component('zone-control', {
 		props: ['initZone'],
 		template:
-			`<li>
-				<div class="btn btn-default" v-on:click="toggleState">
-					<span v-if="zone.state == 'on'" class="glyphicon glyphicon-ok-circle text-success"></span>
-					<span v-else class="glyphicon glyphicon-remove-sign text-danger"></span>
+			`<li style="width:100%">
+				<div class="btn btn-default" style="width:100%" v-on:click="toggleState">
+					<span v-if="zone.state == 'on'" class="glyphicon glyphicon-upload text-success"></span>
+					<span v-else class="glyphicon glyphicon-download"></span>
 					Zone: {{ zone.name }}
 				</div>
 			</li>`,
@@ -89,7 +89,7 @@
 			`<tr>
 				<td>{{ zone.name }}</td>
 				<td>{{ zone.pin }}</td>
-				<td><div v-on:click="deleteZone" class="btn btn-danger btn-small"></div></td>
+				<td><div v-on:click="deleteZone" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-minus"></span></div></td>
 			</tr>`,
 		data: function() {
 			return {
@@ -111,9 +111,9 @@
 	Vue.component('zone-add', {
 		template:
 			`<tr>
-				<td><input v-model="zone.name" type="text" class="form-control"></input></td>
-				<td><input v-model="zone.pin" type="text" class="form-control"></input></td>
-				<td><div v-on:click="addZone" class="btn btn-success btn-small"></div></td>
+				<td><input v-model="zone.name" ref="name" type="text" class="form-control"></input></td>
+				<td><input v-model="zone.pin" v-on:keyup.enter="addZone" type="text" class="form-control"></input></td>
+				<td><div v-on:click="addZone" class="btn btn-success btn-sm"><span class="glyphicon glyphicon-plus"></span></div></td>
 			</tr>`,
 		data: function() {
 			return {
@@ -139,13 +139,17 @@
 							pin: comp.zone.pin})
 					}
 				).then( function(result) {
-					app.load_zones()
-					comp.zone = {}
+					app.load_zones();
+					comp.zone = {
+						name: '',
+						pin: ''
+					};
+					comp.$refs.name.focus();
 				});
 			}
 		}
 	})
-	
+
 	var app = new Vue({
 		el: '#app',
 		data: {
