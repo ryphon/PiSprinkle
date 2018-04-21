@@ -2,7 +2,7 @@
 
 from flask import render_template
 
-from sprinkler import app, db, api
+from sprinkler import app, db, api, sched
 from sprinkler.models import Zone
 from werkzeug.utils import redirect
 from flask.helpers import url_for
@@ -82,12 +82,110 @@ class ZoneListAPI(Resource):
         return marshal(zone, ZoneAPI.fields)
 
 
+class ScheduleAPI(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('zoneID',
+                        type=int,
+                        help='ID number for zone',
+                        required=True)
+    parser.add_argument('minutes',
+                        type=float,
+                        help='Minutes to run zone for',
+                        required=True)
+    parser.add_argument('day_of_week',
+                        type=list,
+                        help='Weekdays to run zone')
+    parser.add_argument('hour',
+                        type=str,
+                        help='Hour to start on',
+                        required=True)
+    parser.add_argument('minute',
+                        type=str,
+                        help='Minute to start on')
+    parser.add_argument('second',
+                        type=str,
+                        help='Second to start on')
+
+    fields = {
+        'uri': fields.Url('schedule'),
+        'id': fields.String,
+        'zoneID': fields.Integer,
+        'minutes': fields.Float,
+        'day_of_week': fields.String,
+        'hour': fields.String,
+        'minute': fields.String,
+        'second': fields.String
+        }
+
+    def get(self, id: str):
+        try:
+            return sched.get_job(id)
+        except ValueError as exc:
+            return {"message": str(exc)}, 400
+
+#    Not worth implementing
+#     def put(self, id: str):
+#         args = self.parser.parse_args(strict=True)
+#         try:
+#             return sched.modify_job(id, **args)
+#         except (ValueError, AttributeError, JobLookupError) as exc:
+#             return {'message': str(exc)}, 400
+
+    def delete(self, id: str):
+        try:
+            sched.remove_job(id)
+            return ''
+        except ValueError as exc:
+            return {'message': str(exc)}, 400
+
+
+class ScheduleListAPI(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('zoneID',
+                        type=int,
+                        help='ID number for zone',
+                        required=True)
+    parser.add_argument('minutes',
+                        type=float,
+                        help='Minutes to run zone for',
+                        required=True)
+    parser.add_argument('day_of_week',
+                        type=list,
+                        help='Weekdays to run zone')
+    parser.add_argument('hour',
+                        type=str,
+                        help='Hour to start on',
+                        required=True)
+    parser.add_argument('minute',
+                        type=str,
+                        help='Minute to start on')
+    parser.add_argument('second',
+                        type=str,
+                        help='Second to start on')
+
+    def get(self):
+        return sched.get_jobs()
+
+    def post(self):
+        args = self.parser.parse_args(strict=True)
+        try:
+            return sched.add_job(**args)
+        except ValueError as exc:
+            return {'message': str(exc)}, 400
+
+
 api.add_resource(ZoneAPI,
                  '/zones/<int:id>',
                  endpoint='zone')
 api.add_resource(ZoneListAPI,
                  '/zones',
                  endpoint='zones')
+api.add_resource(ScheduleAPI,
+                 '/schedules/<id>',
+                 endpoint='schedule')
+api.add_resource(ScheduleListAPI,
+                 '/schedules',
+                 endpoint='schedules')
 
 
 @app.route('/')

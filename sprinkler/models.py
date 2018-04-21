@@ -4,7 +4,6 @@ from sprinkler import db, app
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import String, Integer
 from sqlalchemy import event
-import sys
 from RPi import GPIO
 
 
@@ -56,13 +55,6 @@ class Zone(db.Model):
                 id=self.id,
                 name=self.name,
                 pin=self.pin)
-
-
-# @event.listens_for(Zone, 'init')
-# def zone_init_handler(target, args, kwargs):
-#     app.logger.info('init')
-#     app.logger.info(target)
-#     target.set_up()
 
 
 @event.listens_for(Zone, 'after_delete')

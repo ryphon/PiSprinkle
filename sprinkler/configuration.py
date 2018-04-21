@@ -16,6 +16,8 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') \
         or uuid4().hex
     CSRF_ENABLED = True
+    APSCHEDULE_DATABASE_URI = os.environ.get('APSCHEDULE_DATABASE_URI') \
+        or 'sqlite:///jobs.db'
 
 
 class ProductionConfig(Config):

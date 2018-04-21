@@ -1,5 +1,7 @@
 Flask
 Flask-SQLAlchemy
 Flask-WTF
+wtforms_components
 flask_restful
 RPi.GPIO
+apscheduler

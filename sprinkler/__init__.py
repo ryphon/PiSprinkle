@@ -16,7 +16,11 @@ app.config.from_object('sprinkler.configuration.DevelopmentConfig')
 
 db = SQLAlchemy(app)  # flask-sqlalchemy
 
+
+from sprinkler.schedule import Scheduler  # @IgnorePep8
+sched = Scheduler()
 from sprinkler import views, models  # @IgnorePep8
+
 
 GPIO.setmode(GPIO.BCM)
 db.create_all()
