@@ -83,28 +83,6 @@ class ZoneListAPI(Resource):
 
 
 class ScheduleAPI(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('zoneID',
-                        type=int,
-                        help='ID number for zone',
-                        required=True)
-    parser.add_argument('minutes',
-                        type=float,
-                        help='Minutes to run zone for',
-                        required=True)
-    parser.add_argument('day_of_week',
-                        type=list,
-                        help='Weekdays to run zone')
-    parser.add_argument('hour',
-                        type=str,
-                        help='Hour to start on',
-                        required=True)
-    parser.add_argument('minute',
-                        type=str,
-                        help='Minute to start on')
-    parser.add_argument('second',
-                        type=str,
-                        help='Second to start on')
 
     fields = {
         'uri': fields.Url('schedule'),
@@ -119,7 +97,7 @@ class ScheduleAPI(Resource):
 
     def get(self, id: str):
         try:
-            return sched.get_job(id)
+            return marshal(sched.get_job(id), ScheduleAPI.fields)
         except ValueError as exc:
             return {"message": str(exc)}, 400
 
@@ -150,7 +128,7 @@ class ScheduleListAPI(Resource):
                         help='Minutes to run zone for',
                         required=True)
     parser.add_argument('day_of_week',
-                        type=list,
+                        type=str,
                         help='Weekdays to run zone')
     parser.add_argument('hour',
                         type=str,
@@ -164,12 +142,12 @@ class ScheduleListAPI(Resource):
                         help='Second to start on')
 
     def get(self):
-        return sched.get_jobs()
+        return marshal(sched.get_jobs(), ScheduleAPI.fields)
 
     def post(self):
         args = self.parser.parse_args(strict=True)
         try:
-            return sched.add_job(**args)
+            return marshal(sched.add_job(**args), ScheduleAPI.fields)
         except ValueError as exc:
             return {'message': str(exc)}, 400
 

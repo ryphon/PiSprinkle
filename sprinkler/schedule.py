@@ -18,6 +18,14 @@ class Scheduler(object):
     '''
 
     CRON_FIELDS = ('day_of_week', 'hour', 'minute', 'second')
+    WEEKDAYS = {
+        '0': 'mon',
+        '1': 'tue',
+        '2': 'wed',
+        '3': 'thu',
+        '4': 'fri',
+        '5': 'sat',
+        '6': 'sun'}
 
     def __init__(self):
         jobstores = {
@@ -29,6 +37,7 @@ class Scheduler(object):
 
     def add_job(self, *args, **kwargs):
         args, kwargs = self._map_rest_to_apsched(*args, **kwargs)
+        app.logger.info(msg=(args, kwargs))
         job = self._sched.add_job(*args, **kwargs)
         return self._map_job_to_dict(job)
 
@@ -77,6 +86,15 @@ class Scheduler(object):
                     cronFields[key] = value
             args = (run_zone, 'cron')
             kwargs = cronFields
+            # Change day_of_week numbers to name abbrs
+            # and join into a string
+            if kwargs.get('day_of_week') is not None:
+                dow = kwargs['day_of_week'].split(',')
+                kwargs['day_of_week'] = \
+                    ','.join([cls.WEEKDAYS[x]
+                              if x in cls.WEEKDAYS.keys()
+                              else x
+                              for x in dow])
             kwargs['start_date'] = start
             kwargs['end_date'] = end
             kwargs['args'] = [zoneID, minutes]
