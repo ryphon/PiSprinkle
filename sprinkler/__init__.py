@@ -10,9 +10,9 @@ from RPi import GPIO
 app = Flask(__name__)
 api = Api(app)
 
-app.config.from_object('configuration.ProductionConfig')
+app.config.from_object('sprinkler.configuration.ProductionConfig')
 # app.config.from_object('sprinkler.configuration.DevelopmentConfig')
-# app.config.from_object('configuration.TestingConfig')
+# app.config.from_object('sprinkler.configuration.TestingConfig')
 
 db = SQLAlchemy(app)  # flask-sqlalchemy
 
