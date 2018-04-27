@@ -2,6 +2,6 @@ Flask
 Flask-SQLAlchemy
 Flask-WTF
 wtforms_components
-flask_restful
+flask_restful==0.3.5
 RPi.GPIO
 apscheduler

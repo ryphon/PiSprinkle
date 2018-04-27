@@ -19,13 +19,13 @@ class Scheduler(object):
 
     CRON_FIELDS = ('day_of_week', 'hour', 'minute', 'second')
     WEEKDAYS = {
-        '0': 'mon',
-        '1': 'tue',
-        '2': 'wed',
-        '3': 'thu',
-        '4': 'fri',
-        '5': 'sat',
-        '6': 'sun'}
+        0: 'mon',
+        1: 'tue',
+        2: 'wed',
+        3: 'thu',
+        4: 'fri',
+        5: 'sat',
+        6: 'sun'}
 
     def __init__(self):
         jobstores = {
@@ -33,7 +33,6 @@ class Scheduler(object):
                 url=app.config['APSCHEDULE_DATABASE_URI'])
             }
         self._sched = BackgroundScheduler(jobstores=jobstores)
-        self._sched.start()
 
     def add_job(self, *args, **kwargs):
         args, kwargs = self._map_rest_to_apsched(*args, **kwargs)
@@ -57,8 +56,14 @@ class Scheduler(object):
     def get_job(self, jobID: str):
         return self._map_job_to_dict(self._sched.get_job(jobID))
 
+    def pause(self):
+        self._sched.pause()
+
     def remove_job(self, jobID: str):
         self._sched.remove_job(jobID)
+
+    def start(self):
+        self._sched.start()
 
     @classmethod
     def _map_job_to_dict(cls, job: Job):
@@ -89,7 +94,7 @@ class Scheduler(object):
             # Change day_of_week numbers to name abbrs
             # and join into a string
             if kwargs.get('day_of_week') is not None:
-                dow = kwargs['day_of_week'].split(',')
+                dow = kwargs['day_of_week']
                 kwargs['day_of_week'] = \
                     ','.join([cls.WEEKDAYS[x]
                               if x in cls.WEEKDAYS.keys()

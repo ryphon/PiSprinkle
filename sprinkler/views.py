@@ -8,6 +8,8 @@ from werkzeug.utils import redirect
 from flask.helpers import url_for
 from flask_restful import Resource, reqparse, fields, marshal
 from sqlalchemy.exc import IntegrityError
+import sys
+from flask.globals import request
 
 
 class ZoneAPI(Resource):
@@ -76,6 +78,7 @@ class ZoneListAPI(Resource):
             app.logger.warning(
                 'Invalid zone creation attempted: {}'.format(zone))
             zone.clean_up()
+            app.logger.warning('Failed to create zone {}'.format(zone), file=sys.stderr)
             return {'message': 'Failed to create zone'}, 400
         if args.get('state') is not None:
             zone.state = args['state']
@@ -99,6 +102,7 @@ class ScheduleAPI(Resource):
         try:
             return marshal(sched.get_job(id), ScheduleAPI.fields)
         except ValueError as exc:
+            app.logger.warn(str(exc))
             return {"message": str(exc)}, 400
 
 #    Not worth implementing
@@ -128,7 +132,8 @@ class ScheduleListAPI(Resource):
                         help='Minutes to run zone for',
                         required=True)
     parser.add_argument('day_of_week',
-                        type=str,
+                        type=list,
+                        location='json',
                         help='Weekdays to run zone')
     parser.add_argument('hour',
                         type=str,
@@ -145,10 +150,13 @@ class ScheduleListAPI(Resource):
         return marshal(sched.get_jobs(), ScheduleAPI.fields)
 
     def post(self):
+        app.logger.info(request.json)
         args = self.parser.parse_args(strict=True)
+        app.logger.info(args)
         try:
             return marshal(sched.add_job(**args), ScheduleAPI.fields)
         except ValueError as exc:
+            app.logger.warn(str(exc))
             return {'message': str(exc)}, 400
 
 
