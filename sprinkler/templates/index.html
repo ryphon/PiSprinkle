@@ -96,7 +96,11 @@
 					body: JSON.stringify({state: state})
 				}).then( function(result) {
 					return result.json()
+					return result.json();
 				}).then( function(data) {
+					if ('message' in data) {
+						console.log(data.message);
+					}
 					comp.zone = data;
 				});
 			}
@@ -123,6 +127,11 @@
 					{method: 'DELETE'}
 				).then( function(result) {
 					app.load_zones();
+					return result.json();
+				}).then( function(data) {
+					if ('message' in data) {
+						console.log(data.message);
+					}
 				});
 			}
 		}
@@ -165,6 +174,11 @@
 						pin: ''
 					};
 					comp.$refs.name.focus();
+					return result.json();
+				}).then( function(data) {
+					if ('message' in data) {
+						console.log(data.message);
+					}
 				});
 			}
 		}
@@ -211,6 +225,11 @@
 						{method: 'DELETE'}
 					).then( function(result) {
 						app.load_schedules();
+						return result.json();
+					}).then( function(data) {
+						if ('message' in data) {
+							console.log(data.message);
+						}
 					});
 			}
 		}
@@ -249,7 +268,6 @@
 				console.log('Adding schedule for zone ' + this.schedule.zoneID);
 				var comp = this
 				var time = new Date('January 1, 1970 ' + this.schedule.time_string);
-				console.log('Time: ' + time);
 				var data = JSON.stringify({
 					zoneID: comp.schedule.zoneID,
 					minutes: comp.schedule.minutes,
@@ -257,7 +275,7 @@
 					hour: time.getHours(),
 					minute: time.getMinutes(),
 					second: time.getSeconds()});
-				console.log(data);
+				console.log('POSTing data: ' + data);
 				fetch(
 					"/schedules",
 					{
@@ -275,6 +293,11 @@
 						day_of_week: [],
 						time_string: ''
 					};
+					return result.json();
+				}).then( function(data) {
+					if ('message' in data) {
+						console.log(data.message);
+					}
 				});
 			}
 		}
@@ -320,16 +343,22 @@
 			load_zones: function() {
 				fetch("zones")
 				.then(function(result){
-					return result.json()
+					return result.json();
 				}).then(function(data){
+					if ('message' in data) {
+						console.log(data.message);
+					}
 					app.zones = data;
 				});
 			},
 			load_schedules: function() {
 				fetch("schedules")
 				.then(function(result){
-					return result.json()
+					return result.json();
 				}).then(function(data){
+					if ('message' in data) {
+						console.log(data.message);
+					}
 					app.schedules = data;
 				});
 			},
