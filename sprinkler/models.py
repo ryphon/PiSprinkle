@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from sprinkler import db, app
+from sprinkler import db, app, sched
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import String, Integer
 from sqlalchemy import event
@@ -61,6 +61,7 @@ class Zone(db.Model):
 def delete_zone_handler(mapper, connection, target):
     ''' Just to keep GPIO pins configured appropriately '''
     app.logger.info('after_delete')
+    sched.remove_jobs_for_zone(target.id)
     target.clean_up()
 
 

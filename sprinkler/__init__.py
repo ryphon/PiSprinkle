@@ -10,8 +10,8 @@ from RPi import GPIO
 app = Flask(__name__)
 api = Api(app)
 
-app.config.from_object('sprinkler.configuration.ProductionConfig')
-# app.config.from_object('sprinkler.configuration.DevelopmentConfig')
+# app.config.from_object('sprinkler.configuration.ProductionConfig')
+app.config.from_object('sprinkler.configuration.DevelopmentConfig')
 # app.config.from_object('sprinkler.configuration.TestingConfig')
 
 db = SQLAlchemy(app)  # flask-sqlalchemy
@@ -27,3 +27,5 @@ db.create_all()
 db.session.commit()
 for zone in models.Zone.query.all():
     zone.set_up()
+
+sched.start()

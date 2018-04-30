@@ -126,6 +126,7 @@
 					this.zone.uri,
 					{method: 'DELETE'}
 				).then( function(result) {
+					app.load_schedules();
 					app.load_zones();
 					return result.json();
 				}).then( function(data) {
