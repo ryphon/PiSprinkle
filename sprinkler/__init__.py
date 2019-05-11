@@ -19,7 +19,7 @@ sched = Scheduler()
 from sprinkler import views, models  # @IgnorePep8
 
 GPIO.setmode(GPIO.BCM)
-db.create_all()
+db.metadata.create_all()
 db.session.commit()
 for zone in models.Zone.query.all():
     zone.set_up()
