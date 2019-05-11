@@ -9,6 +9,7 @@ from RPi import GPIO
 
 class Zone(db):
     """ Represents an irrigation zone assigned to a GPIO pin """
+    __table_name__ = 'zone'
 
     id = Column(Integer, primary_key=True)
     pin = Column(Integer, unique=True)
