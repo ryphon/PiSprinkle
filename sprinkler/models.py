@@ -7,12 +7,19 @@ from sqlalchemy import event
 from RPi import GPIO
 
 
-class Zone(db.Model):
-    ''' Represents an irrigation zone assigned to a GPIO pin '''
+class Zone(db):
+    """ Represents an irrigation zone assigned to a GPIO pin """
 
     id = Column(Integer, primary_key=True)
     pin = Column(Integer, unique=True)
     name = Column(String(64), unique=True)
+    fields = {
+        'uri': 'fields.Url',
+        'id': 'fields.Integer',
+        'name': 'fields.String',
+        'state': 'fields.String',
+        'pin': 'fields.Integer'
+    }
 
     def __init__(self, pin: int, name: str):
         app.logger.info('--- Zone init ---')
@@ -50,6 +57,9 @@ class Zone(db.Model):
         for zone in zones:
             zone.clean_up()
 
+    def to_json(self):
+        pass
+
     def __repr__(self):
         return '<Zone(id={id}, name={name}, pin={pin})>'.format(
                 id=self.id,
@@ -59,29 +69,6 @@ class Zone(db.Model):
 
 @event.listens_for(Zone, 'after_delete')
 def delete_zone_handler(mapper, connection, target):
-    ''' Just to keep GPIO pins configured appropriately '''
+    """ Just to keep GPIO pins configured appropriately """
     app.logger.info('after_delete')
     target.clean_up()
-
-
-class User(db.Model):
-    id = Column(Integer, primary_key=True)
-    user = Column(String(64), unique=True)
-    password = Column(String(500))
-    name = Column(String(500))
-    email = Column(String(120), unique=True)
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return self.id
-
-    def __repr__(self):
-        return '<User %r>' % (self.nickname)

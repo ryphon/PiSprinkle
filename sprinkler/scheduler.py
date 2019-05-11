@@ -4,12 +4,13 @@ Created on Apr 20, 2018
 @author: jusdino
 '''
 from apscheduler.schedulers.background import BackgroundScheduler
-from sprinkler.utils import run_zone
-from sprinkler.models import Zone
 from datetime import datetime
 from apscheduler.job import Job
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from sprinkler import app
+from sprinkler import app, socketio
+import sprinkler
+import time
+from flask_restful import marshal
 
 
 class Scheduler(object):
@@ -47,7 +48,7 @@ class Scheduler(object):
 #         job = self._sched.modify_job(jobID, **kwargs)
 #         return self._map_job_to_dict(job)
 
-    def get_jobs(self):
+    def get_jobs(self) -> list:
         jobs = []
         for job in self._sched.get_jobs():
             jobs.append(self._map_job_to_dict(job))
@@ -61,6 +62,12 @@ class Scheduler(object):
 
     def remove_job(self, jobID: str):
         self._sched.remove_job(jobID)
+
+    def remove_jobs_for_zone(self, zoneID: int):
+        jobs = self.get_jobs()
+        for job in jobs:
+            if job['zoneID'] == zoneID:
+                self.remove_job(job['id'])
 
     def start(self):
         self._sched.start()
@@ -84,7 +91,7 @@ class Scheduler(object):
                              start: datetime = None,
                              end: datetime = None,
                              **kwargs):
-        if Zone.query.get(zoneID) is not None:
+        if sprinkler.models.Zone.query.get(zoneID) is not None:
             cronFields = {}
             for key, value in kwargs.items():
                 if key in cls.CRON_FIELDS:
@@ -105,4 +112,16 @@ class Scheduler(object):
             kwargs['args'] = [zoneID, minutes]
             return args, kwargs
         else:
-            raise KeyError('No zone defined with id {}'.format(zoneID))
+            raise ValueError('No zone defined with id {}'.format(zoneID))
+
+
+def run_zone(zoneID: int, minutes: float):
+    zone = sprinkler.models.Zone.query.get(zoneID)
+    if zone:
+        zone.state = 'on'
+        socketio.emit('zone-update',
+                      marshal(zone, sprinkler.views.ZoneAPI.fields))
+        time.sleep(60*minutes)
+        zone.state = 'off'
+        socketio.emit('zone-update',
+                      marshal(zone, sprinkler.views.ZoneAPI.fields))

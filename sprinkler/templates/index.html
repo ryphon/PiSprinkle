@@ -1,380 +1,413 @@
-{% extends "base.html" %}
-{% block content %}
-<div id="app" class="container" style="margin-top: 60px">
-	{% include 'messages.html' %}
-	<div class="panel panel-default">
-		<ul class="nav nav-tabs">
-			<li class="active"><a data-toggle="tab" href="#control">Control</a></li>
-			<li><a data-toggle="tab" href="#setup">Set Up</a></li>
-			<li><a data-toggle="tab" href="#schedule">Schedule</a></li>
-		</ul>
-		<div class="tab-content">
-			<div id="control" class="tab-pane fade in active">
-				<ul class="nav nav-pills nav-stacked" style="margin-top:2px">
-				    <zone-control
-				    	v-for="zone in zones"
-				    	v-bind:init-zone="zone"
-				    	v-bind:key="zone.id">
-					</zone-control>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="description" content="PiSprinkle Irrigation System Controller">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>PiSprinkle</title>
+
+	<link rel="shortcut icon" href="/static/favicon.ico">
+	<!-- Bootstrap core CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+
+<body>
+	<nav class="navbar navbar-default navbar-fixed-top">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="/index">PiSprinkle</a>
+			</div>
+			<div id="navbar" class="collapse navbar-collapse">
+				<ul class="nav navbar-nav navbar-left">
+					<li><a href="{{ url_for('view') }}">Pointless Link</a></li>
 				</ul>
 			</div>
-			<div id="setup" class="tab-pane fade">
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Pin</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr is="zone-setup"
+			<!--/.nav-collapse -->
+		</div>
+	</nav>
+	<div id="app" class="container" style="margin-top: 60px">
+		{% include 'messages.html' %}
+		<div class="panel panel-default">
+			<ul class="nav nav-tabs">
+				<li class="active"><a data-toggle="tab" href="#control">Control</a></li>
+				<li><a data-toggle="tab" href="#setup">Set Up</a></li>
+				<li><a data-toggle="tab" href="#schedule">Schedule</a></li>
+			</ul>
+			<div class="tab-content">
+				<div id="control" class="tab-pane fade in active">
+					<ul class="nav nav-pills nav-stacked" style="margin-top:2px">
+						<zone-control
 							v-for="zone in zones"
 							v-bind:init-zone="zone"
 							v-bind:key="zone.id">
-						</tr>
-						<tr is="zone-add"></tr>
-					</tbody>
-				</table>
+						</zone-control>
+					</ul>
+				</div>
+				<div id="setup" class="tab-pane fade">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Pin</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr is="zone-setup"
+								v-for="zone in zones"
+								v-bind:init-zone="zone"
+								v-bind:key="zone.id">
+							</tr>
+							<tr is="zone-add"></tr>
+						</tbody>
+					</table>
+				</div>
+				<div id="schedule" class="tab-pane fade table-responsive">
+					<table class="table table-condensed">
+						<tbody is="schedule"
+							v-for="sched in schedules"
+							v-bind:init-schedule="sched"
+							v-bind:key="sched.id">
+						</tbody>
+					</table>
+					<div class="btn btn-success" data-toggle="modal" data-target="#add-schedule">Add</div>
+				</div>
 			</div>
-			<div id="schedule" class="tab-pane fade table-responsive">
-				<table class="table table-condensed">
-					<tbody is="schedule"
-						v-for="sched in schedules"
-						v-bind:init-schedule="sched"
-						v-bind:key="sched.id">
-					</tbody>
-				</table>
-				<div class="btn btn-success" data-toggle="modal" data-target="#add-schedule">Add</div>
+		</div>
+		<div class="modal fade" id="add-schedule" tabindex="-1" role="dialog" aria-labelledby="add-schedule" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content panel-default">
+					<div class="modal-header panel-heading">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="confirm-delete">Add Irrigation Schedule</h4>
+					</div>
+					<div class="modal-body">
+						<schedule-add
+							v-bind:zones="zones"
+							v-bind:days="days"></schedule-add>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-	<div class="modal fade" id="add-schedule" tabindex="-1" role="dialog" aria-labelledby="add-schedule" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content panel-default">
-				<div class="modal-header panel-heading">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title" id="confirm-delete">Add Irrigation Schedule</h4>
-				</div>
-				<div class="modal-body">
-					<schedule-add
-						v-bind:zones="zones"
-						v-bind:days="days"></schedule-add>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-{% raw %}
-<script>
-	Vue.component('zone-control', {
-		props: ['initZone'],
-		template:
-			`<li style="width:100%">
-				<div class="btn btn-default" style="width:100%" v-on:click="toggleState">
-					<span v-if="zone.state == 'on'" class="glyphicon glyphicon-upload text-success"></span>
-					<span v-else class="glyphicon glyphicon-download"></span>
-					Zone: {{ zone.name }}
-				</div>
-			</li>`,
-		data: function() {
-			return {
-				zone: this.initZone
-			};
-		},
-		methods: {
-			toggleState: function() {
-				var state = (this.zone.state == 'on' ? 'off' : 'on');
-				console.log('Turning zone ' + this.zone.name + ' ' + state);
-				var comp = this
-				fetch(
-					this.zone.uri,
-					{method: 'PUT',
-					headers: new Headers({
-						'Content-Type': 'application/json'
-					}),
-					body: JSON.stringify({state: state})
-				}).then( function(result) {
-					return result.json()
-					return result.json();
-				}).then( function(data) {
-					if ('message' in data) {
-						console.log(data.message);
-					}
-					comp.zone = data;
-				});
-			}
-		}
-	})
-
-	Vue.component('zone-setup', {
-		props: ['initZone'],
-		template:
-			`<tr>
-				<td>{{ zone.name }}</td>
-				<td>{{ zone.pin }}</td>
-				<td><div v-on:click="deleteZone" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-minus"></span></div></td>
-			</tr>`,
-		data: function() {
-			return {
-				zone: this.initZone
-			};
-		},
-		methods: {
-			deleteZone: function() {
-				fetch(
-					this.zone.uri,
-					{method: 'DELETE'}
-				).then( function(result) {
-					app.load_zones();
-					return result.json();
-				}).then( function(data) {
-					if ('message' in data) {
-						console.log(data.message);
-					}
-				});
-			}
-		}
-	})
-
-	Vue.component('zone-add', {
-		template:
-			`<tr>
-				<td><input v-model="zone.name" ref="name" type="text" class="form-control"></input></td>
-				<td><input v-model="zone.pin" v-on:keyup.enter="addZone" type="text" class="form-control"></input></td>
-				<td><div v-on:click="addZone" class="btn btn-success btn-sm"><span class="glyphicon glyphicon-plus"></span></div></td>
-			</tr>`,
-		data: function() {
-			return {
-				zone: {
-					name: '',
-					pin: ''
-				}
-			};
-		},
-		methods: {
-			addZone: function() {
-				console.log('Adding zone ' + this.zone.name);
-				var comp = this
-				fetch(
-					"/zones",
-					{
-						method: 'POST',
+	<script type="text/javascript" charset="utf-8">
+		Vue.component('zone-control', {
+			props: ['initZone'],
+			template:
+				`<li style="width:100%">
+					<div class="btn btn-default" style="width:100%" v-on:click="toggleState">
+						<span v-if="zone.state == 'on'" class="glyphicon glyphicon-upload text-success"></span>
+						<span v-else class="glyphicon glyphicon-download"></span>
+						Zone: {{ zone.name }}
+					</div>
+				</li>`,
+			data: function() {
+				return {
+					zone: this.initZone
+				};
+			},
+			methods: {
+				toggleState: function() {
+					var state = (this.zone.state == 'on' ? 'off' : 'on');
+					console.log('Turning zone ' + this.zone.name + ' ' + state);
+					var comp = this
+					fetch(
+						this.zone.uri,
+						{method: 'PUT',
 						headers: new Headers({
 							'Content-Type': 'application/json'
 						}),
-						body: JSON.stringify({
-							name: comp.zone.name,
-							pin: comp.zone.pin})
-					}
-				).then( function(result) {
-					app.load_zones();
-					comp.zone = {
-						name: '',
-						pin: ''
-					};
-					comp.$refs.name.focus();
-					return result.json();
-				}).then( function(data) {
-					if ('message' in data) {
-						console.log(data.message);
-					}
-				});
-			}
-		}
-	})
-
-	Vue.component('schedule', {
-		props: ['initSchedule'],
-		template:
-			`<tbody>
-				<tr class="active">
-					<td colspan=2>{{ app.get_zone_name(schedule.zoneID) }}</td>
-					<td>On for {{ schedule.minutes }} mins</td>
-					<td rowspan=2 style="width:30px"><div v-on:click="deleteSchedule" class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-minus"></span></div></td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>Runs on {{ schedule.day_of_week }}</td>
-					<td>at {{ time_string }}</td>
-				</tr>
-			</tbody>`,
-		data: function() {
-			return {
-				schedule: this.initSchedule
-			};
-		},
-		computed: {
-			time_string: function() {
-				var hour = +this.schedule.hour
-				var minute = +this.schedule.minute
-				var second = +this.schedule.second
-				if (!isNaN(hour)&&!isNaN(minute)&&!isNaN(second)) {
-					time = new Date(1970, 0, 1, hour, minute, second, 0);
-					return time.getHours() + ':' + ("0" + time.getMinutes()).substr(-2,2) + ':' + ("0" + time.getSeconds()).substr(-2,2);
-				} else {
-					return this.schedule.hour + ':' + this.schedule.minute + ':' + this.schedule.second;
+						body: JSON.stringify({state: state})
+					}).then( function(result) {
+						return result.json();
+					}).then( function(data) {
+						if ('message' in data) {
+							console.log(data.message);
+						}
+						comp.zone = data;
+					});
 				}
-				
 			}
-		},
-		methods: {
-			deleteSchedule: function() {
+		})
+
+		Vue.component('zone-setup', {
+			props: ['initZone'],
+			template:
+				`<tr>
+					<td>{{ zone.name }}</td>
+					<td>{{ zone.pin }}</td>
+					<td><div v-on:click="deleteZone" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-minus"></span></div></td>
+				</tr>`,
+			data: function() {
+				return {
+					zone: this.initZone
+				};
+			},
+			methods: {
+				deleteZone: function() {
 					fetch(
-						this.schedule.uri,
+						this.zone.uri,
 						{method: 'DELETE'}
 					).then( function(result) {
-						app.load_schedules();
+						app.load_zones();
 						return result.json();
 					}).then( function(data) {
 						if ('message' in data) {
 							console.log(data.message);
 						}
 					});
-			}
-		}
-	})
-
-	Vue.component('schedule-add', {
-		props: ['zones', 'days'],
-		template:
-			`<div class="form-group">
-				<label for="select-zone">Irrigation Zone</label>
-				<select id="select-zone" v-model="schedule.zoneID" class="form-control">
-					<option v-for="zone in zones" :value="zone.id" >{{ zone.name }}</option>
-				</select>
-				<label for="input-minutes">Minutes to be on</label>
-				<input id="input-minutes" v-model="schedule.minutes" type="number" class="form-control" placeholder="Duration in minutes"></input></li>
-				<label for="select-days">Days to run</label>
-				<select id="select-days" multiple v-model="schedule.day_of_week" class="form-control" size=7>
-					<option v-for="day in days" :value="day.number">{{ day.name }}</option>
-				</select>
-				<label for="input-time">Time to run</label>
-				<input id="input-time" v-model="schedule.time_string" type="time" class="form-control"></input>
-				<div v-on:click="addSchedule" class="btn btn-success btn-sm" data-dismiss="modal">Add</div>
-			</div>`,
-		data: function() {
-			return {
-				schedule: {
-					zoneID: '',
-					minutes: '',
-					day_of_week: [],
-					time_string: ''
 				}
 			}
-		},
-		methods: {
-			addSchedule: function () {
-				console.log('Adding schedule for zone ' + this.schedule.zoneID);
-				var comp = this
-				var time = new Date('January 1, 1970 ' + this.schedule.time_string);
-				var data = JSON.stringify({
-					zoneID: comp.schedule.zoneID,
-					minutes: comp.schedule.minutes,
-					day_of_week: comp.schedule.day_of_week,
-					hour: time.getHours(),
-					minute: time.getMinutes(),
-					second: time.getSeconds()});
-				console.log('POSTing data: ' + data);
-				fetch(
-					"/schedules",
-					{
-						method: 'POST',
-						headers: new Headers({
-							'Content-Type': 'application/json'
-						}),
-						body: data
+		})
+
+		Vue.component('zone-add', {
+			template:
+				`<tr>
+					<td><input v-model="zone.name" ref="name" type="text" class="form-control"></input></td>
+					<td><input v-model="zone.pin" v-on:keyup.enter="addZone" type="text" class="form-control"></input></td>
+					<td><div v-on:click="addZone" class="btn btn-success btn-sm"><span class="glyphicon glyphicon-plus"></span></div></td>
+				</tr>`,
+			data: function() {
+				return {
+					zone: {
+						name: '',
+						pin: ''
 					}
-				).then( function(result) {
-					app.load_schedules();
-					comp.zone = {
+				};
+			},
+			methods: {
+				addZone: function() {
+					console.log('Adding zone ' + this.zone.name);
+					var comp = this
+					fetch(
+						"/zones",
+						{
+							method: 'POST',
+							headers: new Headers({
+								'Content-Type': 'application/json'
+							}),
+							body: JSON.stringify({
+								name: comp.zone.name,
+								pin: comp.zone.pin})
+						}
+					).then( function(result) {
+						app.load_zones();
+						comp.zone = {
+							name: '',
+							pin: ''
+						};
+						comp.$refs.name.focus();
+						return result.json();
+					}).then( function(data) {
+						if ('message' in data) {
+							console.log(data.message);
+						}
+					});
+				}
+			}
+		})
+
+		Vue.component('schedule', {
+			props: ['initSchedule'],
+			template:
+				`<tbody>
+					<tr class="active">
+						<td colspan=2>{{ app.get_zone_name(schedule.zoneID) }}</td>
+						<td>On for {{ schedule.minutes }} mins</td>
+						<td rowspan=2 style="width:30px"><div v-on:click="deleteSchedule" class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-minus"></span></div></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td>Runs on {{ schedule.day_of_week }}</td>
+						<td>at {{ time_string }}</td>
+					</tr>
+				</tbody>`,
+			data: function() {
+				return {
+					schedule: this.initSchedule
+				};
+			},
+			computed: {
+				time_string: function() {
+					var hour = +this.schedule.hour
+					var minute = +this.schedule.minute
+					var second = +this.schedule.second
+					if (!isNaN(hour)&&!isNaN(minute)&&!isNaN(second)) {
+						time = new Date(1970, 0, 1, hour, minute, second, 0);
+						return time.getHours() + ':' + ("0" + time.getMinutes()).substr(-2,2) + ':' + ("0" + time.getSeconds()).substr(-2,2);
+					} else {
+						return this.schedule.hour + ':' + this.schedule.minute + ':' + this.schedule.second;
+					}
+
+				}
+			},
+			methods: {
+				deleteSchedule: function() {
+						fetch(
+							this.schedule.uri,
+							{method: 'DELETE'}
+						).then( function(result) {
+							app.load_schedules();
+							return result.json();
+						}).then( function(data) {
+							if ('message' in data) {
+								console.log(data.message);
+							}
+						});
+				}
+			}
+		})
+
+		Vue.component('schedule-add', {
+			props: ['zones', 'days'],
+			template:
+				`<div class="form-group">
+					<label for="select-zone">Irrigation Zone</label>
+					<select id="select-zone" v-model="schedule.zoneID" class="form-control">
+						<option v-for="zone in zones" :value="zone.id" >{{ zone.name }}</option>
+					</select>
+					<label for="input-minutes">Minutes to be on</label>
+					<input id="input-minutes" v-model="schedule.minutes" type="number" class="form-control" placeholder="Duration in minutes"></input></li>
+					<label for="select-days">Days to run</label>
+					<select id="select-days" multiple v-model="schedule.day_of_week" class="form-control" size=7>
+						<option v-for="day in days" :value="day.number">{{ day.name }}</option>
+					</select>
+					<label for="input-time">Time to run</label>
+					<input id="input-time" v-model="schedule.time_string" type="time" class="form-control"></input>
+					<div v-on:click="addSchedule" class="btn btn-success btn-sm" data-dismiss="modal">Add</div>
+				</div>`,
+			data: function() {
+				return {
+					schedule: {
 						zoneID: '',
 						minutes: '',
 						day_of_week: [],
 						time_string: ''
-					};
-					return result.json();
-				}).then( function(data) {
-					if ('message' in data) {
-						console.log(data.message);
 					}
-				});
+				}
+			},
+			methods: {
+				addSchedule: function () {
+					console.log('Adding schedule for zone ' + this.schedule.zoneID);
+					var comp = this
+					var time = new Date('January 1, 1970 ' + this.schedule.time_string);
+					var data = JSON.stringify({
+						zoneID: comp.schedule.zoneID,
+						minutes: comp.schedule.minutes,
+						day_of_week: comp.schedule.day_of_week,
+						hour: time.getHours(),
+						minute: time.getMinutes(),
+						second: time.getSeconds()});
+					console.log('POSTing data: ' + data);
+					fetch(
+						"/schedules",
+						{
+							method: 'POST',
+							headers: new Headers({
+								'Content-Type': 'application/json'
+							}),
+							body: data
+						}
+					).then( function(result) {
+						app.load_schedules();
+						comp.zone = {
+							zoneID: '',
+							minutes: '',
+							day_of_week: [],
+							time_string: ''
+						};
+						return result.json();
+					}).then( function(data) {
+						if ('message' in data) {
+							console.log(data.message);
+						}
+					});
+				}
 			}
-		}
-	})
+		})
 
-	var app = new Vue({
-		el: '#app',
-		data: {
-			zones: [],
-			schedules: [],
-			days: [
-				{
-					number: 0,
-					name: 'Monday'
-				},
-				{
-					number: 1,
-					name: 'Tuesday'
-				},
-				{
-					number: 2,
-					name: 'Wednesday'
-				},
-				{
-					number: 3,
-					name: 'Thursday'
-				},
-				{
-					number: 4,
-					name: 'Friday'
-				},
-				{
-					number: 5,
-					name: 'Saturday'
-				},
-				{
-					number: 6,
-					name: 'Sunday'
-				}
-			]
-		},
-		methods: {
-			load_zones: function() {
-				fetch("zones")
-				.then(function(result){
-					return result.json();
-				}).then(function(data){
-					if ('message' in data) {
-						console.log(data.message);
+		var app = new Vue({
+			el: '#app',
+			data: {
+				zones: [],
+				schedules: [],
+				days: [
+					{
+						number: 0,
+						name: 'Monday'
+					},
+					{
+						number: 1,
+						name: 'Tuesday'
+					},
+					{
+						number: 2,
+						name: 'Wednesday'
+					},
+					{
+						number: 3,
+						name: 'Thursday'
+					},
+					{
+						number: 4,
+						name: 'Friday'
+					},
+					{
+						number: 5,
+						name: 'Saturday'
+					},
+					{
+						number: 6,
+						name: 'Sunday'
 					}
-					app.zones = data;
-				});
+				]
 			},
-			load_schedules: function() {
-				fetch("schedules")
-				.then(function(result){
-					return result.json();
-				}).then(function(data){
-					if ('message' in data) {
-						console.log(data.message);
-					}
-					app.schedules = data;
-				});
-			},
-			get_zone_name: function(id) {
-				for (i=0; i < this.zones.length; i++) {
-					if (this.zones[i]['id'] === id) {
-						return this.zones[i].name;
+			methods: {
+				load_zones: function() {
+					fetch("zones")
+					.then(function(result){
+						return result.json();
+					}).then(function(data){
+						if ('message' in data) {
+							console.log(data.message);
+						}
+						app.zones = data;
+					});
+				},
+				load_schedules: function() {
+					fetch("schedules")
+					.then(function(result){
+						return result.json();
+					}).then(function(data){
+						if ('message' in data) {
+							console.log(data.message);
+						}
+						app.schedules = data;
+					});
+				},
+				get_zone_name: function(id) {
+					for (i=0; i < this.zones.length; i++) {
+						if (this.zones[i]['id'] === id) {
+							return this.zones[i].name;
+						}
 					}
 				}
+			},
+			created: function() {
+				this.load_zones();
+				this.load_schedules();
 			}
-		},
-		created: function() {
-			this.load_zones();
-			this.load_schedules();
-		}
-	})
-</script>
-{% endraw %}
-{% endblock %}
+		})
+	</script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>

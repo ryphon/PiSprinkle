@@ -1,19 +1,15 @@
 # -*- encoding: utf-8 -*-
 
-from flask import render_template
-
-from sprinkler import app, db, api, sched
-from sprinkler.models import Zone
-from werkzeug.utils import redirect
-from flask.helpers import url_for
+from flask.globals import request
 from flask_restful import Resource, reqparse, fields, marshal
 from sqlalchemy.exc import IntegrityError
-import sys
-from flask.globals import request
+
+from sprinkler import app, db, sched, aj
+from sprinkler.models import Zone
 
 
 class ZoneAPI(Resource):
-    ''' REST resource representing irrigation zone '''
+    """ REST resource representing irrigation zone """
     parser = reqparse.RequestParser()
     parser.add_argument('state', type=str, help='Turn the zone on or off')
     parser.add_argument('name', type=str, help='Name of the zone')
@@ -26,12 +22,12 @@ class ZoneAPI(Resource):
         'pin': fields.Integer
         }
 
-    def get(self, id: int):
+    def get(self, id: int):  # @ReservedAssignment
         zone = Zone.query.get(id)
         if zone:
             return marshal(zone, ZoneAPI.fields)
 
-    def put(self, id: int):
+    def put(self, id: int):  # @ReservedAssignment
         zone = Zone.query.get(id)
         if zone:
             args = self.parser.parse_args(strict=True)
@@ -42,7 +38,7 @@ class ZoneAPI(Resource):
                 db.session.commit()
             return marshal(zone, ZoneAPI.fields)
 
-    def delete(self, id):
+    def delete(self, id):  # @ReservedAssignment
         zone = Zone.query.get(id)
         if zone:
             db.session.delete(zone)
@@ -78,10 +74,15 @@ class ZoneListAPI(Resource):
             app.logger.warning(
                 'Invalid zone creation attempted: {}'.format(zone))
             zone.clean_up()
-            app.logger.warning('Failed to create zone {}'.format(zone), file=sys.stderr)
+            app.logger.warning('Failed to create zone {}'.format(zone))
             return {'message': 'Failed to create zone'}, 400
         if args.get('state') is not None:
             zone.state = args['state']
+        if not hasattr(zone, 'id') or zone.id is None:
+            app.logger.warn('New created zone was not given an id: {}'
+                            .format(zone.name))
+            db.session.flush()
+            zone = Zone.query.filter_by(name=zone.name)
         return marshal(zone, ZoneAPI.fields)
 
 
@@ -98,22 +99,14 @@ class ScheduleAPI(Resource):
         'second': fields.String
         }
 
-    def get(self, id: str):
+    def get(self, id: str):  # @ReservedAssignment
         try:
             return marshal(sched.get_job(id), ScheduleAPI.fields)
         except ValueError as exc:
             app.logger.warn(str(exc))
             return {"message": str(exc)}, 400
 
-#    Not worth implementing
-#     def put(self, id: str):
-#         args = self.parser.parse_args(strict=True)
-#         try:
-#             return sched.modify_job(id, **args)
-#         except (ValueError, AttributeError, JobLookupError) as exc:
-#             return {'message': str(exc)}, 400
-
-    def delete(self, id: str):
+    def delete(self, id: str):  # @ReservedAssignment
         try:
             sched.remove_job(id)
             return ''
@@ -160,25 +153,19 @@ class ScheduleListAPI(Resource):
             return {'message': str(exc)}, 400
 
 
-api.add_resource(ZoneAPI,
-                 '/zones/<int:id>',
-                 endpoint='zone')
-api.add_resource(ZoneListAPI,
-                 '/zones',
-                 endpoint='zones')
-api.add_resource(ScheduleAPI,
-                 '/schedules/<id>',
-                 endpoint='schedule')
-api.add_resource(ScheduleListAPI,
-                 '/schedules',
-                 endpoint='schedules')
+@aj.template('index.html')
+async def index():
+    return {}
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+app.router.add_view('/zones/{id:\d+}', ZoneAPI, name='zone')
+app.router.add_view('/zones', ZoneListAPI, name='zones')
+app.router.add_view('/schedules/{id:\d+}', ScheduleAPI, name='schedule')
+app.router.add_view('/schedules', ScheduleListAPI, name='schedules')
+app.router.add_route('GET', '/', index)
 
+# api.add_resource(ZoneAPI, '/zones/<int:id>', endpoint='zone')
+# api.add_resource(ZoneListAPI, '/zones', endpoint='zones')
+# api.add_resource(ScheduleAPI, '/schedules/<id>', endpoint='schedule')
+# api.add_resource(ScheduleListAPI, '/schedules', endpoint='schedules')
 
-@app.route('/view')
-def view():
-    return redirect(url_for('index'))

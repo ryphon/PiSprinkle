@@ -5,3 +5,7 @@ wtforms_components
 flask_restful==0.3.5
 RPi.GPIO
 apscheduler
+redis
+flask-socketio
+aiohttp
+aiohttp_jinja2
