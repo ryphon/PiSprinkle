@@ -7,10 +7,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from apscheduler.job import Job
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from sprinkler import app, socketio
+from sprinkler import app
 import sprinkler
 import time
-from flask_restful import marshal
 
 
 class Scheduler(object):
@@ -119,9 +118,9 @@ def run_zone(zoneID: int, minutes: float):
     zone = sprinkler.models.Zone.query.get(zoneID)
     if zone:
         zone.state = 'on'
-        socketio.emit('zone-update',
-                      marshal(zone, sprinkler.views.ZoneAPI.fields))
+        # socketio.emit('zone-update',
+        #               marshal(zone, sprinkler.views.ZoneAPI.fields))
         time.sleep(60*minutes)
         zone.state = 'off'
-        socketio.emit('zone-update',
-                      marshal(zone, sprinkler.views.ZoneAPI.fields))
+        # socketio.emit('zone-update',
+        #               marshal(zone, sprinkler.views.ZoneAPI.fields))

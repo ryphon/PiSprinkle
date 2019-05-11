@@ -4,3 +4,5 @@ __pycache__
 .pydevproject
 .settings
 venv
+.idea
+*.iml
