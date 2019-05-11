@@ -4,9 +4,9 @@ from uuid import uuid4
 
 
 class Config(object):
-    '''
+    """
     Configuration base, for all environments.
-    '''
+    """
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') \
         or 'sqlite:///app.db'

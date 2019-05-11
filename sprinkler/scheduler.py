@@ -30,7 +30,7 @@ class Scheduler(object):
     def __init__(self):
         jobstores = {
             'default': SQLAlchemyJobStore(
-                url=app.config['APSCHEDULE_DATABASE_URI'])
+                url=app.config.APSCHEDULE_DATABASE_URI)
             }
         self._sched = BackgroundScheduler(jobstores=jobstores)
 
