@@ -53,13 +53,19 @@ class Zone(SABase):
         GPIO.setup(self.pin, GPIO.OUT)
         GPIO.output(self.pin, GPIO.LOW)
 
-    def clean_up(self):
+    def clean_up(self, force=False):
         app.logger.info('Cleaning up {}'.format(self))
-        GPIO.output(self.pin, GPIO.LOW)
-        GPIO.setup(self.pin, GPIO.IN)
-        # This sometimes triggers a warning even though the 'channel' is
-        # in fact set up. Why? Haven't figured that out yet.
-        GPIO.cleanup(self.pin)
+        from sprinkler import db
+
+        cls = self.__class__
+        dup_zone = db.query(cls).filter(cls.id != self.id).filter(cls.pin == self.pin)
+        # Protection for clean_up on duplicate zone creation failure
+        if force or not dup_zone:
+            GPIO.output(self.pin, GPIO.LOW)
+            GPIO.setup(self.pin, GPIO.IN)
+            # This sometimes triggers a warning even though the 'channel' is
+            # in fact set up. Why? Haven't figured that out yet.
+            GPIO.cleanup(self.pin)
 
     @classmethod
     def clean_up_all(cls):
@@ -67,7 +73,7 @@ class Zone(SABase):
 
         zones = db.query(cls).all()
         for zone in zones:
-            zone.clean_up()
+            zone.clean_up(force=True)
 
     def __repr__(self):
         return '<Zone(id={id}, name={name}, pin={pin})>'.format(
