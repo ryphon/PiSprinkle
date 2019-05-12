@@ -24,7 +24,10 @@ def check_args(fn):
                         req_arg["name"], req_arg["help"]
                     )},
                     status=400)
-            if not isinstance(arg, req_arg['type']):
+            # Cast arg to required type
+            try:
+                args[req_arg['name']] = req_arg['type'](arg)
+            except TypeError:
                 return web.json_response(
                     {'message': '{} must be of type {}'.format(
                         req_arg["name"], req_arg["type"]
