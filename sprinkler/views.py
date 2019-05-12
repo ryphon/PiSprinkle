@@ -24,7 +24,7 @@ def check_args(fn):
                         req_arg["name"], req_arg["help"]
                     )},
                     status=400)
-            if not isinstance(arg, req_arg['tpe']):
+            if not isinstance(arg, req_arg['type']):
                 return web.json_response(
                     {'message': '{} must be of type {}'.format(
                         req_arg["name"], req_arg["type"]
