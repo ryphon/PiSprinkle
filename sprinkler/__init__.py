@@ -16,14 +16,14 @@ aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
 # db = SQLAlchemy(app)  # flask-sqlalchemy
 
-from sprinkler.scheduler import Scheduler  # @IgnorePep8
-sched = Scheduler()
-from sprinkler import views, models  # @IgnorePep8
-
 sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
 SABase.metadata.create_all(sa_engine, checkfirst=True)
 Session = sessionmaker(bind=sa_engine)
 db = Session()
+
+from sprinkler.scheduler import Scheduler  # @IgnorePep8
+sched = Scheduler()
+from sprinkler import views, models  # @IgnorePep8
 
 GPIO.setmode(GPIO.BCM)
 db.commit()
