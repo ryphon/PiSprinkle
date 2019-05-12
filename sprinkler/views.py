@@ -240,6 +240,6 @@ async def index(request):
 
 app.router.add_view('/zones/{id:\d+}', ZoneAPI, name='zone')
 app.router.add_view('/zones', ZoneListAPI, name='zones')
-app.router.add_view('/schedules/{id:\d+}', ScheduleAPI, name='schedule')
+app.router.add_view('/schedules/{id}', ScheduleAPI, name='schedule')
 app.router.add_view('/schedules', ScheduleListAPI, name='schedules')
 app.router.add_route('GET', '/', index)
