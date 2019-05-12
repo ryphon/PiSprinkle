@@ -41,7 +41,7 @@ def check_args(fn):
 def dow_handler(dow):
     if isinstance(dow, list):
         return dow
-    if dow = '*':
+    if dow == '*':
         return None
     if isinstance(dow, str):
         return dow.split(',')
