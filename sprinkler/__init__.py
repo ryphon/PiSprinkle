@@ -8,10 +8,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from RPi import GPIO
 from sqlalchemy.orm import sessionmaker
 
-from sprinkler.configuration import DevelopmentConfig
+from sprinkler.configuration import DevelopmentConfig as Config
 
-app = web.Application()
-app.config = DevelopmentConfig
+
+app = web.Application(debug=Config.DEBUG)
+app.config = Config
 aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
 # db = SQLAlchemy(app)  # flask-sqlalchemy
