@@ -35,14 +35,14 @@ class ZoneAPI(Resource):
                 zone.state = args['state']
             if args.get('name') is not None:
                 zone.name = args['name']
-                db.session.commit()
+                db.commit()
             return marshal(zone, ZoneAPI.fields)
 
     def delete(self, id):  # @ReservedAssignment
         zone = Zone.query.get(id)
         if zone:
-            db.session.delete(zone)
-            db.session.commit()
+            db.delete(zone)
+            db.commit()
         return ''
 
 
@@ -68,8 +68,8 @@ class ZoneListAPI(Resource):
         zone = Zone(name=args['name'],
                     pin=args['pin'])
         try:
-            db.session.add(zone)
-            db.session.commit()
+            db.add(zone)
+            db.commit()
         except IntegrityError:
             app.logger.warning(
                 'Invalid zone creation attempted: {}'.format(zone))
@@ -81,7 +81,7 @@ class ZoneListAPI(Resource):
         if not hasattr(zone, 'id') or zone.id is None:
             app.logger.warn('New created zone was not given an id: {}'
                             .format(zone.name))
-            db.session.flush()
+            db.flush()
             zone = Zone.query.filter_by(name=zone.name)
         return marshal(zone, ZoneAPI.fields)
 
