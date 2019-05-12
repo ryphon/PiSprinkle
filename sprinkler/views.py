@@ -38,6 +38,16 @@ def check_args(fn):
     return wrapper
 
 
+def dow_handler(dow):
+    if isinstance(dow, list):
+        return dow
+    if dow = '*':
+        return None
+    if isinstance(dow, str):
+        return dow.split(',')
+    raise TypeError('Unhandled input: {}'.format(str(dow)))
+
+
 class BaseWebView(web.View):
     REQUIRED_ARGS = []
 
@@ -173,7 +183,7 @@ class ScheduleListAPI(BaseWebView):
         },
         {
             'name': 'day_of_week',
-            'type': list,
+            'type': dow_handler,
             'help': 'Weekdays to run zone'
         },
         {
