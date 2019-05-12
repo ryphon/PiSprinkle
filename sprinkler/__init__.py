@@ -17,14 +17,14 @@ SABase = declarative_base()
 # db = SQLAlchemy(app)  # flask-sqlalchemy
 
 sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
+Session = sessionmaker(bind=sa_engine)
+db = Session()
 
 from sprinkler.scheduler import Scheduler  # @IgnorePep8
 sched = Scheduler()
 from sprinkler import views, models  # @IgnorePep8
 
 SABase.metadata.create_all(sa_engine, checkfirst=True)
-Session = sessionmaker(bind=sa_engine)
-db = Session()
 
 GPIO.setmode(GPIO.BCM)
 db.commit()
