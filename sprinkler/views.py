@@ -90,11 +90,6 @@ class ZoneAPI(BaseWebView):
 class ZoneListAPI(BaseWebView):
     REQUIRED_ARGS = [
         {
-            'name': 'state',
-            'type': bool,
-            'help': 'Turn the zone on or off'
-        },
-        {
             'name': 'name',
             'type': str,
             'help': 'Name of the zone'
