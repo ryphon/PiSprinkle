@@ -19,7 +19,8 @@ aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
 
 sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
-Session = scoped_session(bind=sa_engine)
+session_factory = sessionmaker(bind=sa_engine)
+Session = scoped_session(session_factory)
 db = Session()
 
 from sprinkler.scheduler import Scheduler  # @IgnorePep8
