@@ -90,7 +90,7 @@ class Scheduler(object):
                              start: datetime = None,
                              end: datetime = None,
                              **kwargs):
-        if sprinkler.models.Zone.query.get(zoneID) is not None:
+        if sprinkler.models.db.query(Zone).get(zoneID) is not None:
             cronFields = {}
             for key, value in kwargs.items():
                 if key in cls.CRON_FIELDS:
@@ -115,7 +115,7 @@ class Scheduler(object):
 
 
 def run_zone(zoneID: int, minutes: float):
-    zone = sprinkler.models.Zone.query.get(zoneID)
+    zone = sprinkler.models.db.query(Zone).get(zoneID)
     if zone:
         zone.state = 'on'
         # socketio.emit('zone-update',

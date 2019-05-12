@@ -6,7 +6,7 @@ import time
 
 
 def run_zone(zoneID: int, minutes: float):
-    zone = Zone.query.get(zoneID)
+    zone = db.query(Zone).get(zoneID)
     if zone:
         zone.state = 'on'
         time.sleep(60*minutes)

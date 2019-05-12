@@ -27,5 +27,5 @@ from sprinkler import views, models  # @IgnorePep8
 
 GPIO.setmode(GPIO.BCM)
 db.commit()
-for zone in models.Zone.query.all():
+for zone in db.query(models.Zone).all():  # models.Zone.query.all():
     zone.set_up()

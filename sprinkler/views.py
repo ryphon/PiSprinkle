@@ -23,12 +23,12 @@ class ZoneAPI(Resource):
         }
 
     def get(self, id: int):  # @ReservedAssignment
-        zone = Zone.query.get(id)
+        zone = db.query(Zone).get(id)
         if zone:
             return marshal(zone, ZoneAPI.fields)
 
     def put(self, id: int):  # @ReservedAssignment
-        zone = Zone.query.get(id)
+        zone = db.query(Zone).get(id)
         if zone:
             args = self.parser.parse_args(strict=True)
             if args.get('state') is not None:
@@ -39,7 +39,7 @@ class ZoneAPI(Resource):
             return marshal(zone, ZoneAPI.fields)
 
     def delete(self, id):  # @ReservedAssignment
-        zone = Zone.query.get(id)
+        zone = db.query(Zone).get(id)
         if zone:
             db.delete(zone)
             db.commit()
@@ -61,7 +61,7 @@ class ZoneListAPI(Resource):
                         required=True)
 
     def get(self):
-        return marshal(Zone.query.all(), ZoneAPI.fields)
+        return marshal(db.query(Zone).all(), ZoneAPI.fields)
 
     def post(self):
         args = self.parser.parse_args(strict=True)
@@ -82,7 +82,7 @@ class ZoneListAPI(Resource):
             app.logger.warn('New created zone was not given an id: {}'
                             .format(zone.name))
             db.flush()
-            zone = Zone.query.filter_by(name=zone.name)
+            zone = db.query(Zone).filter_by(name=zone.name)
         return marshal(zone, ZoneAPI.fields)
 
 
