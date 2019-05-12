@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
 
-from sprinkler import db, app
+from sprinkler import db, app, SABase
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import String, Integer
 from sqlalchemy import event
 from RPi import GPIO
 
 
-class Zone(db):
+class Zone(SABase):
     """ Represents an irrigation zone assigned to a GPIO pin """
     __tablename__ = 'zone'
 
