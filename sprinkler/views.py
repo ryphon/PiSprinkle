@@ -22,12 +22,14 @@ class ZoneAPI(Resource):
         'pin': fields.Integer
         }
 
-    def get(self, id: int):  # @ReservedAssignment
+    def get(self, request):  # @ReservedAssignment
+        id = request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
             return marshal(zone, ZoneAPI.fields)
 
-    def put(self, id: int):  # @ReservedAssignment
+    def put(self, request):  # @ReservedAssignment
+        id = request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
             args = self.parser.parse_args(strict=True)
@@ -38,7 +40,8 @@ class ZoneAPI(Resource):
                 db.commit()
             return marshal(zone, ZoneAPI.fields)
 
-    def delete(self, id):  # @ReservedAssignment
+    def delete(self, request):  # @ReservedAssignment
+        id = request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
             db.delete(zone)
@@ -60,10 +63,10 @@ class ZoneListAPI(Resource):
                         help='Pin number controlling zone',
                         required=True)
 
-    def get(self):
+    def get(self, request):
         return marshal(db.query(Zone).all(), ZoneAPI.fields)
 
-    def post(self):
+    def post(self, request):
         args = self.parser.parse_args(strict=True)
         zone = Zone(name=args['name'],
                     pin=args['pin'])
@@ -99,14 +102,16 @@ class ScheduleAPI(Resource):
         'second': fields.String
         }
 
-    def get(self, id: str):  # @ReservedAssignment
+    def get(self, request):  # @ReservedAssignment
+        id = request.match_info['id']
         try:
             return marshal(sched.get_job(id), ScheduleAPI.fields)
         except ValueError as exc:
             app.logger.warn(str(exc))
             return {"message": str(exc)}, 400
 
-    def delete(self, id: str):  # @ReservedAssignment
+    def delete(self, request):  # @ReservedAssignment
+        id = request.match_info['id']
         try:
             sched.remove_job(id)
             return ''
@@ -139,10 +144,10 @@ class ScheduleListAPI(Resource):
                         type=str,
                         help='Second to start on')
 
-    def get(self):
+    def get(self, request):
         return marshal(sched.get_jobs(), ScheduleAPI.fields)
 
-    def post(self):
+    def post(self, request):
         app.logger.info(request.json)
         args = self.parser.parse_args(strict=True)
         app.logger.info(args)
@@ -154,7 +159,7 @@ class ScheduleListAPI(Resource):
 
 
 @aj.template('index.html')
-async def index():
+async def index(request):
     return {}
 
 
