@@ -29,7 +29,7 @@ class Zone(SABase):
 
     @property
     def url(self):
-        return app.router[self.endpoint].url_for().with_query({'id': self.id})
+        return app.router[self.endpoint].url_for(id=self.pin.id)
 
     @state.setter
     def state(self, state):
