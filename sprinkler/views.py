@@ -17,7 +17,7 @@ def check_args(fn):
         args.update(slf.request.match_info)
         for req_arg in slf.REQUIRED_ARGS:
             try:
-                arg = args[req_arg]
+                arg = args[req_arg['name']]
             except KeyError:
                 return web.json_response(
                     {'message': 'Missing required argument: {} ({})'.format(
