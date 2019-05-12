@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
 from RPi import GPIO
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from sprinkler.configuration import DevelopmentConfig as Config
 
@@ -19,7 +19,7 @@ aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
 
 sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
-Session = sessionmaker(bind=sa_engine)
+Session = scoped_session(bind=sa_engine)
 db = Session()
 
 from sprinkler.scheduler import Scheduler  # @IgnorePep8
