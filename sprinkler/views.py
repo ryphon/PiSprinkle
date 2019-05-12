@@ -133,7 +133,7 @@ class ZoneListAPI(BaseWebView):
                 'Invalid zone creation attempted: {}'.format(zone))
             zone.clean_up()
             app.logger.warning('Failed to create zone {}'.format(zone))
-            return {'message': 'Failed to create zone'}, 400
+            return web.json_response({'message': 'Failed to create zone'}, status=400)
         if args.get('state') is not None:
             zone.state = args['state']
         if not hasattr(zone, 'id') or zone.id is None:
