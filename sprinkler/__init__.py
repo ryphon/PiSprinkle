@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import jinja2
+import logging
 from aiohttp import web
 import aiohttp_jinja2 as aj
 from sqlalchemy import create_engine
@@ -10,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 
 from sprinkler.configuration import DevelopmentConfig as Config
 
+logging.basicConfig(level=logging.DEBUG)
 
 app = web.Application(debug=Config.DEBUG)
 app.config = Config
