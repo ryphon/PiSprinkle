@@ -17,7 +17,6 @@ app = web.Application(debug=Config.DEBUG)
 app.config = Config
 aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
-# db = SQLAlchemy(app)  # flask-sqlalchemy
 
 sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
 Session = sessionmaker(bind=sa_engine)
@@ -27,9 +26,28 @@ from sprinkler.scheduler import Scheduler  # @IgnorePep8
 sched = Scheduler()
 from sprinkler import views, models  # @IgnorePep8
 
-SABase.metadata.create_all(sa_engine, checkfirst=True)
 
-GPIO.setmode(GPIO.BCM)
-db.commit()
-for zone in db.query(models.Zone).all():  # models.Zone.query.all():
-    zone.set_up()
+async def on_startup(app):
+    # Set up db if necessary
+    SABase.metadata.create_all(sa_engine, checkfirst=True)
+
+    # Set up GPIO pins
+    GPIO.setmode(GPIO.BCM)
+    db.commit()
+    for zone in db.query(models.Zone).all():  # models.Zone.query.all():
+        zone.set_up()
+
+    # Start up task scheduler
+    sched.start()
+
+
+async def on_shutdown(app):
+    # Clean up GPIO pins
+    models.Zone.clean_up_all()
+
+    # Pause task scheduler
+    sched.pause()
+
+
+app.on_startup.append(on_startup)
+app.on_shutdown.append(on_shutdown)
