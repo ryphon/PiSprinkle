@@ -19,11 +19,17 @@ def check_args(fn):
             try:
                 arg = args[req_arg]
             except KeyError:
-                return web.json_response({'message': f'Missing required argument: {req_arg["name"]} ({req_arg["help"]})'},
-                                         status=400)
+                return web.json_response(
+                    {'message': 'Missing required argument: {} ({})'.format(
+                        req_arg["name"], req_arg["help"]
+                    )},
+                    status=400)
             if not isinstance(arg, req_arg['tpe']):
-                return web.json_response({'message': f'{req_arg["name"]} must be of type {req_arg["type"]}'},
-                                         status=406)
+                return web.json_response(
+                    {'message': '{} must be of type {}'.format(
+                        req_arg["name"], req_arg["type"]
+                    )},
+                    status=406)
         slf.request.mashed_args = args
         return await fn(slf)
     return wrapper
@@ -39,7 +45,7 @@ class ZoneAPI(BaseWebView):
         {
             'name': 'state',
             'type': str,
-            'help': "Turn the zone on or off"
+            'help': 'Turn the zone on or off'
         },
         {
             'name': 'name',
