@@ -45,8 +45,8 @@ async def on_shutdown(app):
     # Clean up GPIO pins
     models.Zone.clean_up_all()
 
-    # Pause task scheduler
-    sched.pause()
+    # Stop task scheduler
+    sched.shutdown()
 
 
 app.on_startup.append(on_startup)

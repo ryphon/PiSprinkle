@@ -3,7 +3,7 @@ Created on Apr 20, 2018
 
 @author: jusdino
 """
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler as APScheduler
 from datetime import datetime
 from apscheduler.job import Job
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -34,7 +34,7 @@ class Scheduler(object):
             'default': SQLAlchemyJobStore(
                 url=app.config.APSCHEDULE_DATABASE_URI)
             }
-        self._sched = BackgroundScheduler(jobstores=jobstores)
+        self._sched = APScheduler(jobstores=jobstores)
 
     @classmethod
     def get_url(cls, job_id: str):
@@ -73,6 +73,9 @@ class Scheduler(object):
 
     def start(self):
         self._sched.start()
+
+    def shutdown(self):
+        self._sched.shutdown()
 
     @classmethod
     def _map_job_to_dict(cls, job: Job):
