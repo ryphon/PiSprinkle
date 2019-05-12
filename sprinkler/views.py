@@ -49,11 +49,6 @@ class ZoneAPI(BaseWebView):
             'name': 'state',
             'type': str,
             'help': 'Turn the zone on or off'
-        },
-        {
-            'name': 'name',
-            'type': str,
-            'help': 'Name of the zone'
         }
     ]
 
@@ -77,7 +72,7 @@ class ZoneAPI(BaseWebView):
             if args.get('state') is not None:
                 zone.state = args['state']
             if args.get('name') is not None:
-                zone.name = args['name']
+                zone.name = str(args['name'])
                 db.commit()
             return web.json_response(zone.as_dict)
 
