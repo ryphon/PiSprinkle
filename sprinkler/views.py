@@ -19,7 +19,7 @@ def check_args(fn):
             try:
                 arg = args[req_arg]
             except KeyError:
-                return web.json_response({'message': f'Missing required argument: {req_arg["name"]} ({req_arg["help"]}'},
+                return web.json_response({'message': f'Missing required argument: {req_arg["name"]} ({req_arg["help"]})'},
                                          status=400)
             if not isinstance(arg, req_arg['tpe']):
                 return web.json_response({'message': f'{req_arg["name"]} must be of type {req_arg["type"]}'},
