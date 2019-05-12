@@ -38,7 +38,7 @@ class Scheduler(object):
 
     @classmethod
     def get_url(cls, job_id: str):
-        return app.router[cls.endpoint].url_for(id=str(job_id))
+        return str(app.router[cls.endpoint].url_for(id=str(job_id)))
 
     def add_job(self, *args, **kwargs):
         args, kwargs = self._map_rest_to_apsched(*args, **kwargs)
