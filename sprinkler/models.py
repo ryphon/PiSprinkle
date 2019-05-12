@@ -63,7 +63,9 @@ class Zone(SABase):
 
     @classmethod
     def clean_up_all(cls):
-        zones = cls.query.all()
+        from sprinkler import db
+
+        zones = db.query(cls).all()
         for zone in zones:
             zone.clean_up()
 
