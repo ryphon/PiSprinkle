@@ -1,21 +1,22 @@
-'''
+"""
 Created on Apr 20, 2018
 
 @author: jusdino
-'''
+"""
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 from apscheduler.job import Job
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from sprinkler import app
-import sprinkler
+
+from sprinkler import app, db
+from sprinkler.models import Zone
 import time
 
 
 class Scheduler(object):
-    '''
+    """
     Handler class for communicating with apscheduler BackgroundScheduler
-    '''
+    """
 
     CRON_FIELDS = ('day_of_week', 'hour', 'minute', 'second')
     WEEKDAYS = {
@@ -26,6 +27,7 @@ class Scheduler(object):
         4: 'fri',
         5: 'sat',
         6: 'sun'}
+    endpoint = 'schedule'
 
     def __init__(self):
         jobstores = {
@@ -33,6 +35,10 @@ class Scheduler(object):
                 url=app.config.APSCHEDULE_DATABASE_URI)
             }
         self._sched = BackgroundScheduler(jobstores=jobstores)
+
+    @classmethod
+    def get_url(cls, job_id: str):
+        return app.router[cls.endpoint].url_for().with_query({'id': job_id})
 
     def add_job(self, *args, **kwargs):
         args, kwargs = self._map_rest_to_apsched(*args, **kwargs)
@@ -48,10 +54,7 @@ class Scheduler(object):
 #         return self._map_job_to_dict(job)
 
     def get_jobs(self) -> list:
-        jobs = []
-        for job in self._sched.get_jobs():
-            jobs.append(self._map_job_to_dict(job))
-        return jobs
+        return [self._map_job_to_dict(job) for job in self._sched.get_jobs()]
 
     def get_job(self, jobID: str):
         return self._map_job_to_dict(self._sched.get_job(jobID))
@@ -74,14 +77,16 @@ class Scheduler(object):
     @classmethod
     def _map_job_to_dict(cls, job: Job):
         # TODO: add start_date, end_date
-        dictJob = {}
-        dictJob['id'] = job.id
-        dictJob['zoneID'] = job.args[0]
-        dictJob['minutes'] = job.args[1]
+        dict_job = {
+            'url': cls.get_url(job.id),
+            'id': job.id,
+            'zoneID': job.args[0],
+            'minutes': job.args[1]
+        }
         for field in job.trigger.fields:
             if field.name in cls.CRON_FIELDS:
-                dictJob[field.name] = str(field)
-        return dictJob
+                dict_job[field.name] = str(field)
+        return dict_job
 
     @classmethod
     def _map_rest_to_apsched(cls,
@@ -90,7 +95,7 @@ class Scheduler(object):
                              start: datetime = None,
                              end: datetime = None,
                              **kwargs):
-        if sprinkler.models.db.query(Zone).get(zoneID) is not None:
+        if db.query(Zone).get(zoneID) is not None:
             cronFields = {}
             for key, value in kwargs.items():
                 if key in cls.CRON_FIELDS:
@@ -115,7 +120,7 @@ class Scheduler(object):
 
 
 def run_zone(zoneID: int, minutes: float):
-    zone = sprinkler.models.db.query(Zone).get(zoneID)
+    zone = db.query(Zone).get(zoneID)
     if zone:
         zone.state = 'on'
         # socketio.emit('zone-update',

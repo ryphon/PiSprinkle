@@ -1,73 +1,124 @@
 # -*- encoding: utf-8 -*-
+import functools
 
-from flask.globals import request
-from flask_restful import Resource, reqparse, fields, marshal
+from aiohttp import web
 from sqlalchemy.exc import IntegrityError
 
 from sprinkler import app, db, sched, aj
 from sprinkler.models import Zone
 
 
-class ZoneAPI(Resource):
+def check_args(fn):
+    @functools.wraps(fn)
+    async def wrapper(slf: BaseWebView):
+        # Mash together request json, query args, url args
+        args = await slf.request.json()
+        args.update(slf.request.query)
+        args.update(slf.request.match_info)
+        for req_arg in slf.REQUIRED_ARGS:
+            try:
+                arg = args[req_arg]
+            except KeyError:
+                return web.json_response({'message': f'Missing required argument: {req_arg["name"]} ({req_arg["help"]}'},
+                                         status=400)
+            if not isinstance(arg, req_arg['tpe']):
+                return web.json_response({'message': f'{req_arg["name"]} must be of type {req_arg["type"]}'},
+                                         status=406)
+        slf.request.mashed_args = args
+        return await fn(slf)
+    return wrapper
+
+
+class BaseWebView(web.View):
+    REQUIRED_ARGS = []
+
+
+class ZoneAPI(BaseWebView):
     """ REST resource representing irrigation zone """
-    parser = reqparse.RequestParser()
-    parser.add_argument('state', type=str, help='Turn the zone on or off')
-    parser.add_argument('name', type=str, help='Name of the zone')
-
-    fields = {
-        'uri': fields.Url('zone'),
-        'id': fields.Integer,
-        'name': fields.String,
-        'state': fields.String,
-        'pin': fields.Integer
+    REQUIRED_ARGS = [
+        {
+            'name': 'state',
+            'type': str,
+            'help': "Turn the zone on or off"
+        },
+        {
+            'name': 'name',
+            'type': str,
+            'help': 'Name of the zone'
         }
+    ]
 
-    def get(self, request):  # @ReservedAssignment
-        id = request.match_info['id']
+    # parser = reqparse.RequestParser()
+    # parser.add_argument('state', type=str, help='Turn the zone on or off')
+    # parser.add_argument('name', type=str, help='Name of the zone')
+
+    async def get(self):
+        id = self.request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
-            return marshal(zone, ZoneAPI.fields)
+            return web.json_response(zone.as_dict)
 
-    def put(self, request):  # @ReservedAssignment
-        id = request.match_info['id']
+    @check_args
+    async def put(self):
+        id = self.request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
-            args = self.parser.parse_args(strict=True)
+            # args = self.parser.parse_args(strict=True)
+            args = self.request.mashed_args
             if args.get('state') is not None:
                 zone.state = args['state']
             if args.get('name') is not None:
                 zone.name = args['name']
                 db.commit()
-            return marshal(zone, ZoneAPI.fields)
+            return web.json_response(zone.as_dict)
 
-    def delete(self, request):  # @ReservedAssignment
-        id = request.match_info['id']
+    async def delete(self):
+        id = self.request.match_info['id']
         zone = db.query(Zone).get(id)
         if zone:
             db.delete(zone)
             db.commit()
-        return ''
+        return web.Response(text='')
 
 
-class ZoneListAPI(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('state',
-                        type=bool,
-                        help='Turn the zone on or off')
-    parser.add_argument('name',
-                        type=str,
-                        help='Name of the zone',
-                        required=True)
-    parser.add_argument('pin',
-                        type=int,
-                        help='Pin number controlling zone',
-                        required=True)
+class ZoneListAPI(BaseWebView):
+    REQUIRED_ARGS = {
+        {
+            'name': 'state',
+            'type': bool,
+            'help': 'Turn the zone on or off'
+        },
+        {
+            'name': 'name',
+            'type': str,
+            'help': 'Name of the zone'
+        },
+        {
+            'name': 'pin',
+            'type': int,
+            'help': 'BCM pin number controlling the zone'
+        }
+    }
+    # parser = reqparse.RequestParser()
+    # parser.add_argument('state',
+    #                     type=bool,
+    #                     help='Turn the zone on or off')
+    # parser.add_argument('name',
+    #                     type=str,
+    #                     help='Name of the zone',
+    #                     required=True)
+    # parser.add_argument('pin',
+    #                     type=int,
+    #                     help='Pin number controlling zone',
+    #                     required=True)
 
-    def get(self, request):
-        return marshal(db.query(Zone).all(), ZoneAPI.fields)
+    async def get(self):
+        return web.json_response(tuple(zone.as_dict for zone in db.query(Zone).all()))
 
-    def post(self, request):
-        args = self.parser.parse_args(strict=True)
+    @check_args
+    async def post(self):
+        # args = self.parser.parse_args(strict=True)
+        args = self.request.mashed_args
         zone = Zone(name=args['name'],
                     pin=args['pin'])
         try:
@@ -86,76 +137,100 @@ class ZoneListAPI(Resource):
                             .format(zone.name))
             db.flush()
             zone = db.query(Zone).filter_by(name=zone.name)
-        return marshal(zone, ZoneAPI.fields)
+        return web.json_response(zone.as_dict)
 
 
-class ScheduleAPI(Resource):
+class ScheduleAPI(BaseWebView):
 
-    fields = {
-        'uri': fields.Url('schedule'),
-        'id': fields.String,
-        'zoneID': fields.Integer,
-        'minutes': fields.Float,
-        'day_of_week': fields.String,
-        'hour': fields.String,
-        'minute': fields.String,
-        'second': fields.String
-        }
-
-    def get(self, request):  # @ReservedAssignment
-        id = request.match_info['id']
+    async def get(self):
+        id = self.request.match_info['id']
         try:
-            return marshal(sched.get_job(id), ScheduleAPI.fields)
+            return web.json_response(sched.get_job(id))
         except ValueError as exc:
             app.logger.warn(str(exc))
-            return {"message": str(exc)}, 400
+            return web.json_response({"message": str(exc)}, status=400)
 
-    def delete(self, request):  # @ReservedAssignment
-        id = request.match_info['id']
+    async def delete(self):
+        id = self.request.match_info['id']
         try:
             sched.remove_job(id)
-            return ''
+            return web.Response(text='')
         except ValueError as exc:
-            return {'message': str(exc)}, 400
+            return web.json_response({'message': str(exc)}, status=400)
 
 
-class ScheduleListAPI(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('zoneID',
-                        type=int,
-                        help='ID number for zone',
-                        required=True)
-    parser.add_argument('minutes',
-                        type=float,
-                        help='Minutes to run zone for',
-                        required=True)
-    parser.add_argument('day_of_week',
-                        type=list,
-                        location='json',
-                        help='Weekdays to run zone')
-    parser.add_argument('hour',
-                        type=str,
-                        help='Hour to start on',
-                        required=True)
-    parser.add_argument('minute',
-                        type=str,
-                        help='Minute to start on')
-    parser.add_argument('second',
-                        type=str,
-                        help='Second to start on')
+class ScheduleListAPI(BaseWebView):
+    REQUIRED_ARGS = [
+        {
+            'name': 'zoneID',
+            'type': int,
+            'help': 'ID number for zone'
+        },
+        {
+            'name': 'minutes',
+            'type': float,
+            'help': 'Minutes to run zone for'
+        },
+        {
+            'name': 'day_of_week',
+            'type': list,
+            'help': 'Weekdays to run zone'
+        },
+        {
+            'name': 'hour',
+            'type': str,
+            'help': 'Hour to start on'
+        },
+        {
+            'name': 'minute',
+            'type': str,
+            'help': 'Minute to start on'
+        },
+        {
+            'name': 'second',
+            'type': str,
+            'help': 'Second to start on'
+        }
 
-    def get(self, request):
-        return marshal(sched.get_jobs(), ScheduleAPI.fields)
+    ]
+    # parser = reqparse.RequestParser()
+    # parser.add_argument('zoneID',
+    #                     type=int,
+    #                     help='ID number for zone',
+    #                     required=True)
+    # parser.add_argument('minutes',
+    #                     type=float,
+    #                     help='Minutes to run zone for',
+    #                     required=True)
+    # parser.add_argument('day_of_week',
+    #                     type=list,
+    #                     location='json',
+    #                     help='Weekdays to run zone')
+    # parser.add_argument('hour',
+    #                     type=str,
+    #                     help='Hour to start on',
+    #                     required=True)
+    # parser.add_argument('minute',
+    #                     type=str,
+    #                     help='Minute to start on')
+    # parser.add_argument('second',
+    #                     type=str,
+    #                     help='Second to start on')
 
-    def post(self, request):
-        app.logger.info(request.json)
-        args = self.parser.parse_args(strict=True)
+    async def get(self):
+        return web.json_response(sched.get_jobs())
+
+    @check_args
+    async def post(self):
+        app.logger.info(self.request.json)
+        # args = self.parser.parse_args(strict=True)
+        args = self.request.mashed_args
         app.logger.info(args)
         try:
-            return marshal(sched.add_job(**args), ScheduleAPI.fields)
+            return web.json_response(sched.add_job(**args))
         except ValueError as exc:
             app.logger.warn(str(exc))
-            return {'message': str(exc)}, 400
+            return web.json_response({'message': str(exc)}, status=400)
 
 
 @aj.template('index.html')
@@ -168,9 +243,3 @@ app.router.add_view('/zones', ZoneListAPI, name='zones')
 app.router.add_view('/schedules/{id:\d+}', ScheduleAPI, name='schedule')
 app.router.add_view('/schedules', ScheduleListAPI, name='schedules')
 app.router.add_route('GET', '/', index)
-
-# api.add_resource(ZoneAPI, '/zones/<int:id>', endpoint='zone')
-# api.add_resource(ZoneListAPI, '/zones', endpoint='zones')
-# api.add_resource(ScheduleAPI, '/schedules/<id>', endpoint='schedule')
-# api.add_resource(ScheduleListAPI, '/schedules', endpoint='schedules')
-
