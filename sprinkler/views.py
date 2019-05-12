@@ -88,7 +88,7 @@ class ZoneAPI(BaseWebView):
 
 
 class ZoneListAPI(BaseWebView):
-    REQUIRED_ARGS = {
+    REQUIRED_ARGS = [
         {
             'name': 'state',
             'type': bool,
@@ -104,7 +104,7 @@ class ZoneListAPI(BaseWebView):
             'type': int,
             'help': 'BCM pin number controlling the zone'
         }
-    }
+    ]
     # parser = reqparse.RequestParser()
     # parser.add_argument('state',
     #                     type=bool,
