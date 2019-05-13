@@ -3,6 +3,8 @@ Created on Apr 20, 2018
 
 @author: jusdino
 """
+import json
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APScheduler
 from datetime import datetime
 from apscheduler.job import Job
@@ -98,7 +100,12 @@ class Scheduler(object):
                              start: datetime = None,
                              end: datetime = None,
                              **kwargs):
-        if db.query(Zone).get(zoneID) is not None:
+        zone = db.query(Zone).get(zoneID)
+        if zone is not None:
+            zone_data = zone.as_dict
+            del zone_data['id']
+            del zone_data['url']
+            zone_data = json.dumps(zone_data)
             cronFields = {}
             for key, value in kwargs.items():
                 if key in cls.CRON_FIELDS:
@@ -116,14 +123,15 @@ class Scheduler(object):
                               for x in dow])
             kwargs['start_date'] = start
             kwargs['end_date'] = end
-            kwargs['args'] = [zoneID, minutes]
+            kwargs['args'] = [zone_data, minutes]
             return args, kwargs
         else:
             raise ValueError('No zone defined with id {}'.format(zoneID))
 
 
-def run_zone(zoneID: int, minutes: float):
-    zone = db.query(Zone).get(zoneID)
+def run_zone(zone_data: str, minutes: float):
+    zone_data = json.loads(zone_data)
+    zone = Zone(**zone_data)
     if zone:
         zone.state = 'on'
         # socketio.emit('zone-update',
