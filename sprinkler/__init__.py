@@ -1,4 +1,6 @@
 # -*- encoding: utf-8 -*-
+import threading
+
 import jinja2
 import logging
 from aiohttp import web
@@ -55,3 +57,5 @@ async def on_cleanup(app):
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
 app.on_cleanup.append(on_cleanup)
+
+app.logger.debug('Main thread: %s', threading.get_ident())

@@ -5,6 +5,7 @@ Created on Apr 20, 2018
 """
 import asyncio
 import json
+import threading
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APScheduler
 from datetime import datetime
@@ -13,7 +14,6 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 from sprinkler import app, db
 from sprinkler.models import Zone
-import time
 
 
 class Scheduler(object):
@@ -132,6 +132,7 @@ class Scheduler(object):
 
 
 async def run_zone(zone_data: str, minutes: float):
+    app.logger.debug('Job thread: %s', threading.get_ident())
     zone_data = json.loads(zone_data)
     zone = Zone(**zone_data)
     if zone:
