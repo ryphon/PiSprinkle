@@ -47,7 +47,7 @@ async def on_shutdown(app):
     sched.shutdown()
 
 
-async def on_cleanup(app)
+async def on_cleanup(app):
     # Clean up GPIO pins
     models.Zone.clean_up_all()
 
