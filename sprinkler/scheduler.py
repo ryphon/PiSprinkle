@@ -39,7 +39,7 @@ class Scheduler(object):
         self._sched = APScheduler(jobstores=jobstores)
 
     @classmethod
-    def get_url(cls, job_id: str):
+    def get_uri(cls, job_id: str):
         return str(app.router[cls.endpoint].url_for(id=str(job_id)))
 
     def add_job(self, *args, **kwargs):
@@ -83,7 +83,7 @@ class Scheduler(object):
     def _map_job_to_dict(cls, job: Job):
         # TODO: add start_date, end_date
         dict_job = {
-            'url': cls.get_url(job.id),
+            'uri': cls.get_url(job.id),
             'id': job.id,
             'zoneID': job.args[0],
             'minutes': job.args[1]
@@ -104,7 +104,7 @@ class Scheduler(object):
         if zone is not None:
             zone_data = zone.as_dict
             del zone_data['id']
-            del zone_data['url']
+            del zone_data['uri']
             zone_data = json.dumps(zone_data)
             cronFields = {}
             for key, value in kwargs.items():
