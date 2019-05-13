@@ -83,7 +83,7 @@ class Scheduler(object):
     def _map_job_to_dict(cls, job: Job):
         # TODO: add start_date, end_date
         dict_job = {
-            'uri': cls.get_url(job.id),
+            'uri': cls.get_uri(job.id),
             'id': job.id,
             'zoneID': job.args[0],
             'minutes': job.args[1]
