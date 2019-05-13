@@ -3,6 +3,7 @@ Created on Apr 20, 2018
 
 @author: jusdino
 """
+import asyncio
 import json
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APScheduler
@@ -130,14 +131,14 @@ class Scheduler(object):
             raise ValueError('No zone defined with id {}'.format(zoneID))
 
 
-def run_zone(zone_data: str, minutes: float):
+async def run_zone(zone_data: str, minutes: float):
     zone_data = json.loads(zone_data)
     zone = Zone(**zone_data)
     if zone:
         zone.state = 'on'
         # socketio.emit('zone-update',
         #               marshal(zone, sprinkler.views.ZoneAPI.fields))
-        time.sleep(60*minutes)
+        await asyncio.sleep(60*minutes)
         zone.state = 'off'
         # socketio.emit('zone-update',
         #               marshal(zone, sprinkler.views.ZoneAPI.fields))
