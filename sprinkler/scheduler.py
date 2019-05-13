@@ -103,11 +103,6 @@ class Scheduler(object):
                              **kwargs):
         zone = db.query(Zone).get(zoneID)
         if zone is not None:
-            zone_data = {
-                'name': zone.name,
-                'pin': zone.pin
-            }
-            zone_data = json.dumps(zone_data)
             cronFields = {}
             for key, value in kwargs.items():
                 if key in cls.CRON_FIELDS:
@@ -125,16 +120,15 @@ class Scheduler(object):
                               for x in dow])
             kwargs['start_date'] = start
             kwargs['end_date'] = end
-            kwargs['args'] = [zone_data, minutes]
+            kwargs['args'] = [zoneID, minutes]
             return args, kwargs
         else:
             raise ValueError('No zone defined with id {}'.format(zoneID))
 
 
-async def run_zone(zone_data: str, minutes: float):
+async def run_zone(zone_id: str, minutes: float):
     app.logger.debug('Job thread: %s', threading.get_ident())
-    zone_data = json.loads(zone_data)
-    zone = Zone(**zone_data)
+    zone = db.query(Zone).get(zone_id)
     if zone:
         zone.state = 'on'
         # socketio.emit('zone-update',
