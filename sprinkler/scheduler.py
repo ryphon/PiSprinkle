@@ -102,9 +102,10 @@ class Scheduler(object):
                              **kwargs):
         zone = db.query(Zone).get(zoneID)
         if zone is not None:
-            zone_data = zone.as_dict
-            del zone_data['id']
-            del zone_data['uri']
+            zone_data = {
+                'name': zone.name,
+                'pin': zone.pin
+            }
             zone_data = json.dumps(zone_data)
             cronFields = {}
             for key, value in kwargs.items():

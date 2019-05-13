@@ -28,7 +28,7 @@ class Zone(SABase):
         return 'on' if GPIO.HIGH == GPIO.input(self.pin) else 'off'
 
     @property
-    def url(self):
+    def uri(self):
         return str(app.router[self.endpoint].url_for(id=str(self.id)))
 
     @state.setter
@@ -41,7 +41,7 @@ class Zone(SABase):
     @property
     def as_dict(self):
         return {
-            'uri': self.url,
+            'uri': self.uri,
             'id': self.id,
             'name': self.name,
             'state': self.state,
