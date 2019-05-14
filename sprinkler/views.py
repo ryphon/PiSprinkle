@@ -108,18 +108,6 @@ class ZoneListAPI(BaseWebView):
             'help': 'BCM pin number controlling the zone'
         }
     ]
-    # parser = reqparse.RequestParser()
-    # parser.add_argument('state',
-    #                     type=bool,
-    #                     help='Turn the zone on or off')
-    # parser.add_argument('name',
-    #                     type=str,
-    #                     help='Name of the zone',
-    #                     required=True)
-    # parser.add_argument('pin',
-    #                     type=int,
-    #                     help='Pin number controlling zone',
-    #                     required=True)
 
     async def get(self):
         return web.json_response(tuple(zone.as_dict for zone in db.query(Zone).all()))
@@ -203,29 +191,6 @@ class ScheduleListAPI(BaseWebView):
         }
 
     ]
-    # parser = reqparse.RequestParser()
-    # parser.add_argument('zoneID',
-    #                     type=int,
-    #                     help='ID number for zone',
-    #                     required=True)
-    # parser.add_argument('minutes',
-    #                     type=float,
-    #                     help='Minutes to run zone for',
-    #                     required=True)
-    # parser.add_argument('day_of_week',
-    #                     type=list,
-    #                     location='json',
-    #                     help='Weekdays to run zone')
-    # parser.add_argument('hour',
-    #                     type=str,
-    #                     help='Hour to start on',
-    #                     required=True)
-    # parser.add_argument('minute',
-    #                     type=str,
-    #                     help='Minute to start on')
-    # parser.add_argument('second',
-    #                     type=str,
-    #                     help='Second to start on')
 
     async def get(self):
         return web.json_response(sched.get_jobs())

@@ -4,7 +4,6 @@ Created on Apr 20, 2018
 @author: jusdino
 """
 import asyncio
-import json
 import threading
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler as APScheduler
@@ -35,7 +34,7 @@ class Scheduler(object):
     def __init__(self):
         jobstores = {
             'default': SQLAlchemyJobStore(
-                url=app.config.APSCHEDULE_DATABASE_URI)
+                url=app['APSCHEDULE_DATABASE_URI'])
             }
         self._sched = APScheduler(jobstores=jobstores)
 
@@ -48,13 +47,6 @@ class Scheduler(object):
         app.logger.info(msg=(args, kwargs))
         job = self._sched.add_job(*args, **kwargs)
         return self._map_job_to_dict(job)
-
-#    Just add/delete jobs. Not worth modifying - especially since modifying
-#    triggers is a whole different thing.
-#     def modify_job(self, jobID: str, *args, **kwargs):
-#         args, kwargs = self._map_rest_to_apsched(*args, **kwargs)
-#         job = self._sched.modify_job(jobID, **kwargs)
-#         return self._map_job_to_dict(job)
 
     def get_jobs(self) -> list:
         return [self._map_job_to_dict(job) for job in self._sched.get_jobs()]

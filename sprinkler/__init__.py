@@ -4,23 +4,26 @@ import threading
 import jinja2
 import logging
 from aiohttp import web
+from RPi import GPIO
 import aiohttp_jinja2 as aj
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-
-from RPi import GPIO
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from sprinkler.configuration import DevelopmentConfig as Config
+from sprinkler.configuration import config
 
-logging.basicConfig(level=logging.DEBUG)
 
-app = web.Application(debug=Config.DEBUG)
-app.config = Config
+if config['DEBUG']:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
+app = web.Application(debug=config['DEBUG'])
+app.update(config)
 aj.setup(app, loader=jinja2.FileSystemLoader('sprinkler/templates'))
 SABase = declarative_base()
 
-sa_engine = create_engine(app.config.SQLALCHEMY_DATABASE_URI)
+sa_engine = create_engine(app['SQLALCHEMY_DATABASE_URI'])
 session_factory = sessionmaker(bind=sa_engine)
 Session = scoped_session(session_factory)
 db = Session()

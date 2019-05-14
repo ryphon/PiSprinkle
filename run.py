@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- encoding: utf-8 -*-
 
-from aiohttp import web
 import os
+from aiohttp import web
 from sprinkler import app
 
 
