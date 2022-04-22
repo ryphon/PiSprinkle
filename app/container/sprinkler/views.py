@@ -96,7 +96,7 @@ class ScheduleAPI(Resource):
         'hour': fields.String,
         'minute': fields.String,
         'second': fields.String
-        }
+    }
 
     def get(self, id: str):
         try:
@@ -175,6 +175,7 @@ api.add_resource(ScheduleListAPI,
 
 
 @app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html')
 
