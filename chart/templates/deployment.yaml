@@ -1,4 +1,3 @@
-{{- if .Values.useDeploy -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,22 +33,19 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.podEnv }}
           env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
             - name: PORT
-              value: {{ .Values.containerEnv.containerPort }}
+              value: "{{ .Values.containerEnv.containerPort }}"
             - name: SQLALCHEMY_DATABASE_URI
-              value: {{ .Values.containerEnv.sqlUri }}
+              value: "{{ .Values.containerEnv.sqlUri }}"
             - name: APSCHEDULE_DATABASE_URI
-              value: {{ .Values.containerEnv.apscheduleUri }}
+              value: "{{ .Values.containerEnv.apscheduleUri }}"
             - name: SECRET_KEY
-              value: {{ .Values.containerEnv.secretKey }}
+              value: "{{ .Values.containerEnv.secretKey }}"
             - name: DEBUG
-              value: {{ .Values.containerEnv.debug }}
+              value: "{{ .Values.containerEnv.debug }}"
             - name: TESTING
-              value: {{ .Values.containerEnv.testing }}
+              value: "{{ .Values.containerEnv.testing }}"
           ports:
             - name: http
               containerPort: {{ .Values.containerEnv.containerPort }}
@@ -84,4 +80,3 @@ spec:
         persistentVolumeClaim:
           claimName: {{ include "pisprinkle.fullname" . }}-pvc
       {{- end -}}
-{{- end -}}
