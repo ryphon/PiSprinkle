@@ -1,0 +1,87 @@
+{{- if .Values.useDeploy -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pisprinkle.fullname" . }}
+  labels:
+    {{- include "pisprinkle.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pisprinkle.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "pisprinkle.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pisprinkle.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.podEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+            - name: PORT
+              value: {{ .Values.containerEnv.containerPort }}
+            - name: SQLALCHEMY_DATABASE_URI
+              value: {{ .Values.containerEnv.sqlUri }}
+            - name: APSCHEDULE_DATABASE_URI
+              value: {{ .Values.containerEnv.apscheduleUri }}
+            - name: SECRET_KEY
+              value: {{ .Values.containerEnv.secretKey }}
+            - name: DEBUG
+              value: {{ .Values.containerEnv.debug }}
+            - name: TESTING
+              value: {{ .Values.containerEnv.testing }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerEnv.containerPort }}
+              protocol: TCP
+          {{ if .Values.volume.enabled -}}
+          volumeMounts:
+            - mountPath: {{ .Values.volume.mountPath }}
+              name: storage
+          {{ end }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.containerEnv.containerPort }}
+              scheme: HTTP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{ if .Values.volume.enabled -}}
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: {{ include "pisprinkle.fullname" . }}-pvc
+      {{- end -}}
+{{- end -}}

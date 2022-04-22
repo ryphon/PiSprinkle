@@ -1,0 +1,19 @@
+{{- if .Values.useDeploy -}}
+{{- if .Values.volume.enabled -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "pisprinkle.fullname" . }}-pvc
+  labels:
+    {{- include "pisprinkle.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.volume.size | quote }}
+  {{- with .Values.volume.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

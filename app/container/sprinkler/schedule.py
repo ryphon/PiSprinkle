@@ -31,7 +31,7 @@ class Scheduler(object):
         jobstores = {
             'default': SQLAlchemyJobStore(
                 url=app.config['APSCHEDULE_DATABASE_URI'])
-            }
+        }
         self._sched = BackgroundScheduler(jobstores=jobstores)
 
     def add_job(self, *args, **kwargs):
@@ -118,5 +118,5 @@ def run_zone(zoneID: int, minutes: float):
     zone = sprinkler.models.Zone.query.get(zoneID)
     if zone:
         zone.state = 'on'
-        time.sleep(60*minutes)
+        time.sleep(60 * minutes)
         zone.state = 'off'

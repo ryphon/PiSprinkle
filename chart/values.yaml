@@ -1,0 +1,110 @@
+# Default values for pisprinkle.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Must be 1 without extra work
+replicaCount: 1
+
+image:
+  repository: ryphon/pisprinkle
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+containerEnv:
+  debug: False
+  testing: False
+  containerPort: 5000
+  sqlUri: ""
+  apscheduleUri: ""
+  secretKey: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+  # app: pisprinkle
+podEnv: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  extraLabels:
+    {}
+    # vhost: pisprinkle.company.corp
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+  tls:
+    []
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+
+resources: {}
+  # Note this is meant to be ran on a Raspberry Pi like board with GPIO pins, so.. keep this small.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Don't enable this, app is still single threaded only
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Will want to specify the rpi node, as it'll be the only one with gpio
+nodeSelector:
+  - sprinkler: true
+
+# Will absolutely need to tolerate any taints your rPi node has
+# Mine just has a noexecute with key sprinkler
+tolerations:
+  - key: sprinkler
+    operator: Exists
+    effect: NoExecute
+
+affinity: {}
+
+volume:
+  enabled: true
+  size: 4Gi
+  storageClassName: nfs

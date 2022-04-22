@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: 0.0.1
+description: Sprinkler Control
+home: https://github.com/jusdino/PiSprinkle
+name: pisprinkle
+sources:
+- https://github.com/jusdino/PiSprinkle
+type: application
+version: 0.0.1
