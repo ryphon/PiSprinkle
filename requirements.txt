@@ -2,3 +2,4 @@ RPi.GPIO
 apscheduler
 aiohttp
 aiohttp_jinja2
+sqlalchemy
