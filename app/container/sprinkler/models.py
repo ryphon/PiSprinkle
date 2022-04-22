@@ -1,14 +1,17 @@
 # -*- encoding: utf-8 -*-
 
-from sprinkler import db, app, sched
+from sprinkler import app, SABase
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import String, Integer
 from sqlalchemy import event
 from RPi import GPIO
 
 
-class Zone(db.Model):
-    ''' Represents an irrigation zone assigned to a GPIO pin '''
+class Zone(SABase):
+    """ Represents an irrigation zone assigned to a GPIO pin """
+    __tablename__ = 'zone'
+
+    endpoint = 'zone'
 
     id = Column(Integer, primary_key=True)
     pin = Column(Integer, unique=True)
@@ -24,6 +27,10 @@ class Zone(db.Model):
     def state(self):
         return 'on' if GPIO.HIGH == GPIO.input(self.pin) else 'off'
 
+    @property
+    def uri(self):
+        return str(app.router[self.endpoint].url_for(id=str(self.id)))
+
     @state.setter
     def state(self, state):
         if state is True or state == 'on':
@@ -31,24 +38,42 @@ class Zone(db.Model):
         else:
             GPIO.output(self.pin, GPIO.LOW)
 
+    @property
+    def as_dict(self):
+        return {
+            'uri': self.uri,
+            'id': self.id,
+            'name': self.name,
+            'state': self.state,
+            'pin': self.pin
+        }
+
     def set_up(self):
         app.logger.info('Setting up {}'.format(self))
         GPIO.setup(self.pin, GPIO.OUT)
         GPIO.output(self.pin, GPIO.LOW)
 
-    def clean_up(self):
+    def clean_up(self, force=False):
         app.logger.info('Cleaning up {}'.format(self))
-        GPIO.output(self.pin, GPIO.LOW)
-        GPIO.setup(self.pin, GPIO.IN)
-        # This sometimes triggers a warning even though the 'channel' is
-        # in fact set up. Why? Haven't figured that out yet.
-        GPIO.cleanup(self.pin)
+        from sprinkler import db
+
+        cls = self.__class__
+        dup_zone = db.query(cls).filter(cls.id != self.id).filter(cls.pin == self.pin)
+        # Protection for clean_up on duplicate zone creation failure
+        if force or not dup_zone:
+            GPIO.output(self.pin, GPIO.LOW)
+            GPIO.setup(self.pin, GPIO.IN)
+            # This sometimes triggers a warning even though the 'channel' is
+            # in fact set up. Why? Haven't figured that out yet.
+            GPIO.cleanup(self.pin)
 
     @classmethod
     def clean_up_all(cls):
-        zones = cls.query.all()
+        from sprinkler import db
+
+        zones = db.query(cls).all()
         for zone in zones:
-            zone.clean_up()
+            zone.clean_up(force=True)
 
     def __repr__(self):
         return '<Zone(id={id}, name={name}, pin={pin})>'.format(
@@ -59,30 +84,7 @@ class Zone(db.Model):
 
 @event.listens_for(Zone, 'after_delete')
 def delete_zone_handler(mapper, connection, target):
-    ''' Just to keep GPIO pins configured appropriately '''
+    """ Just to keep GPIO pins configured appropriately """
     app.logger.info('after_delete')
     sched.remove_jobs_for_zone(target.id)
     target.clean_up()
-
-
-class User(db.Model):
-    id = Column(Integer, primary_key=True)
-    user = Column(String(64), unique=True)
-    password = Column(String(500))
-    name = Column(String(500))
-    email = Column(String(120), unique=True)
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return self.id
-
-    def __repr__(self):
-        return '<User %r>' % (self.nickname)
