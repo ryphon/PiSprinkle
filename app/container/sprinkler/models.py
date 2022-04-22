@@ -52,9 +52,9 @@ class Zone(db.Model):
 
     def __repr__(self):
         return '<Zone(id={id}, name={name}, pin={pin})>'.format(
-                id=self.id,
-                name=self.name,
-                pin=self.pin)
+            id=self.id,
+            name=self.name,
+            pin=self.pin)
 
 
 @event.listens_for(Zone, 'after_delete')
