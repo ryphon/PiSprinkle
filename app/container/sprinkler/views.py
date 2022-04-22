@@ -24,7 +24,7 @@ class ZoneAPI(Resource):
         'name': fields.String,
         'state': fields.String,
         'pin': fields.Integer
-        }
+    }
 
     def get(self, id: int):
         zone = Zone.query.get(id)
