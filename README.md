@@ -7,6 +7,9 @@ This project is in its infancy, much work to do!
   - Add/configure zones with a name and what GPIO pin controls it
   - Manually turn on/off zones in app
   - Schedule irrigation by zone, weekday, and time
+  - Docker and Kubernetes support
+  - Kustomize preferred, Helm chart available
+  - Persistent volume capabilities
 
 # Work to do
   - There are some bugs to do with resource management (GPIO pins, apscheduler) that need fixing

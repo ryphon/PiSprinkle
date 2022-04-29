@@ -1,0 +1,12 @@
+namespace: pisprinkle
+
+helmCharts:
+  - namespace: pisprinkle
+    name: pisprinkle
+    releaseName: sprinkler
+    valuesFile: values.yaml
+
+resources:
+  - namespace.yaml
+    #- ingressroute.yaml
+    #- certificate.yaml

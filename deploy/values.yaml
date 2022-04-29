@@ -1,0 +1,56 @@
+# Default values for pisprinkle.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Must be 1 without extra work
+replicaCount: 1
+
+image:
+  repository: ryphon/pisprinkle
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+containerEnv:
+  debug: "False"
+  testing: "False"
+  containerPort: "5000"
+  sqlUri: "sqlite:////vol/app.db"
+  apscheduleUri: "sqlite:////vol/jobs.db"
+  secretKey: "test123"
+
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+
+resources:
+  # Note this is meant to be ran on a Raspberry Pi like board with GPIO pins, so.. keep this small.
+  limits:
+    cpu: 1
+    memory: 1G
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Will want to specify the rpi node, as it'll be the only one with gpio
+nodeSelector:
+  sprinkler: "true"
+
+# Will absolutely need to tolerate any taints your rPi node has
+# Mine just has a noexecute with key sprinkler
+tolerations:
+  - key: sprinkler
+    operator: Exists
+    effect: NoExecute
+
+# idk about volumes yet so we'll see
+volume:
+  enabled: true
+  size: 200M
+  storageClassName: nfs
+  mountPath: /vol
