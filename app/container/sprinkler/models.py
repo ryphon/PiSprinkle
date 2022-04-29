@@ -86,5 +86,4 @@ class Zone(SABase):
 def delete_zone_handler(mapper, connection, target):
     """ Just to keep GPIO pins configured appropriately """
     app.logger.info('after_delete')
-    sched.remove_jobs_for_zone(target.id)
     target.clean_up()
